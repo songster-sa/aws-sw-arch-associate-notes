@@ -7,6 +7,7 @@ Notes here are incremental to my AWS Developer Associate exam notes :
 https://github.com/songster-sa/aws-developer-associate-notes
 
 ## Contents
+- [IAM](#IAM)
 - [S3](#S3)
 - [Data Sync](#Data-Sync)
 - [Cloud Front](#Cloud-Front)
@@ -23,11 +24,27 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - [Aurora](#Aurora)
 - [DMS - database migration system](#DMS---database-migration-system)
 - [Amazon EMR - elastic map reduce](#Amazon-EMR---elastic-map-reduce)
+- [AWS Directory Service](#AWS-Directory-Service)
+- [AWS Resource Access Manager](#AWS-Resource-Access-Manager)
+- [AWS SSO](#AWS-SSO)
+- [](#)
+- [](#)
+- [](#)
+- [](#)
 - [](#)
 - [](#)
 - [VPC](#VPC)
 - [Random points](#Random-points)
 - [](#)
+
+## IAM
+- policies - effect, action, resource
+    - identity policy - attached to iam user/roles/grps
+    - resource policy - attached to resources
+- permission boundaries - delegate admin
+    - can be set only for IAM users/ roles
+    - dont allow or deny - simply define the max perm entity can have
+    - if present then this takes priority and is final
 
 ## S3
 - components - key, value, versionId, metadata, tiers, lifecycle mgmt, versioning, encryption
@@ -279,6 +296,47 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - EMR archives every 5min
     - u can set it up ONLY when u first create cluster - not later
 
+## AWS Directory Service
+- connect aws resource to on-premise active directory (AD)
+- its a standalone directory in cloud
+- helps u access aws using corporate credentials
+- u can SSO to all ec2 instance joined to your AD domain - using AD Connectors (directory gateway)
+- What is AD - users, groups, policies, LDAP and DNS, kerberos auth, high availability
+- AWS managed Microsoft AD Domain Controllers - run on windows - in multi AZ (default 2)
+    - extend aws AD to on-premise AD using AD Trust
+    - u have to take care of only the data eg users, groups, policies, scaling DC, AD Trust, LDAPS (certificate authority), federation
+    - aws takes of - multi AZ, patching, snapshot and restore, instance rotation
+- Simple AD
+    - basic AD features
+    - small <=500 users, large <=5000 users
+    - does not support AD Trust
+- CLoud Directory - fully managed directory-based store for developers
+    - for apps which create/use/work with org charts, catalogs, registries
+    - not AD compatible
+
+## AWS Resource Access Manager
+- share resource access across aws accounts
+- App Mesh, Aurora, CodeBuild, EC2, EC2 image builder, License manager, Resource Groups, Route 53
+- use RAM in account 1 - share - go in RAM account 2 - accept the invitation to share
+- only share access - cannot change the resource - so clone DB in own account to use
+
+## AWS SSO
+- SSO for all aws accounts + external apps (office, salesforce etc)
+- integrate with on-premise AD, or any SAML provider
+- all logins recorded in Cloud Trail
+- use existing identities to login various apps
+
+## Route 53
+- top level domain server -> name server -> start of authority server -> DNS record -> IP
+- default TTL is 48hr with most ISP
+- cant have CNAME for naked domain names (without www)
+- MX record
+- PTR record - like WhoIs - lookup IP to find domain name
+- u can buy domains directly with amazon - it gives multiple top level domains to you - in case one goes down
+- u can set health checks - if fails then route is taken out until it passes
+- Geo-proximity routing - traffic flow only - create traffic policies
+    - geo based + bias setting
+
 ## VPC
 - network ACL - STATELESS
 
@@ -307,3 +365,4 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - any serverless pricing is always by use (invocation) - otherwise its by hr/minute
 - who has caching - cloud front, api gateway, elastic cache, DAX
     - the more caching u provide in the arch in the front, the less load on DB or backend
+- ARN - arn:partition:service:region:account_id:resource_type/resource
