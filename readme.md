@@ -17,6 +17,13 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - [EBS](#EBS)
 - [EFS](#EFS)
 - [HPC - high performance compute architecture](#HPC---high-performance-compute-architecture)
+- [RDS](#RDS)
+- [DynamoDB](#DynamoDB)
+- [Redshift](#Redshift)
+- [Aurora](#Aurora)
+- [DMS - database migration system](#DMS---database-migration-system)
+- [Amazon EMR - elastic map reduce](#Amazon-EMR---elastic-map-reduce)
+- [](#)
 - [](#)
 - [VPC](#VPC)
 - [Random points](#Random-points)
@@ -191,6 +198,87 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - aws batch - schedule, parallel , multiple jobs
 - parallel cluster - automate creation of VPC, simple text file for provisioning
 
+## RDS
+- has types of instances ?
+    - reserved instance
+- multi az - for disaster recovery - automatic fail over - no dns url change
+    - u can force failover from one AZ to another by rebooting the RDS instance
+- read replicas - for high performance - no automatic fail over - u have to create new DNS url and then use it
+    - u must have automatic backup turned on - to create Read replicas
+    - RRs can have multi AZ of their own
+    - RRs can be in other regions
+    - not for MS SQL
+    - replication is free?
+- have option for storage auto scaling - to add storage on the fly
+- have option of termination protection and maintenance window
+- RDS runs on VMs, but u dont have access to those VMs
+- backups storage - u get same size in S3 as ur DB size
+- when u restore - it will be a new RDS instance with new endpoint
+- once encryption is not - everything related will be encrypted (backups, snapshots, read replicas, data)
+- mySQL installation default port - 3306
+
+## DynamoDB
+- stored on SSD - spread across 3 geo distinct data centers
+- Transactions - prepare+commit - upto 25 items or 4MB of data at a time
+- capacity
+    - provisioned - 
+    - on demand - pay per request - still scales up automatically - but u pay for storage and backup not for read/writes
+        - good for new apps where we dono the expected load
+- Streams - can be used for cross region replication, events-Lambda, relationships across table
+    - global tables - use streams to replicate
+- auto encryption at rest - of course via KMS
+
+## Redshift
+- single node - 160gb
+- multi node = leader node + upto 128 compute nodes
+- adv compression - on columns
+- does not need indexing
+- massive parallel processing
+- backups - 1-35days (1 default)- enabled by default
+- maintains 3 copies of data - original, replica, backup(s3)
+- can async replicate cross region for DR in S3
+- charge for compute node hours only + backups and any data transfer
+- encryption - in transit + at rest
+- no multi AZ - but if outage - u can use snapshots to restore in diff AZ
+
+#Aurora
+- starts with 10GB, auto scales in 10GB increments - upto 64TB
+- compute resources can scale upto 32vCPU and 244GB
+- auto backups always enabled - dont affect performance
+- can share snapshots with other aws accounts
+- aurora serverless 
+    - on demand, cost effective
+    - automatically starts, shuts down, scales up or down
+    - for infrequent, intermittent, unpredictable workloads
+- how to convert MYSQL to Aurora - create aurora read replica - then promote to DB (or take snapshot of RR and then restore as new DB)
+    - can do in a diff region
+    - writer node - diff endpoint - diff AZ
+    - reader node - diff endpoint - diff AZ
+
+## DMS - database migration system
+- src (on-premise, ec2, rds, s3, azure sql) - dest (on-premise, ec2, RDS etc) - can be any DB
+- src remains operational during migration
+- is a server in cloud that runs replicate s/w
+- how
+    - create src and dest connections
+    - schedule task on the DMS server
+- u can let DMS create tables on dest, or u can pre-create them (manually or use SCT - schema conversion tool , some or all)
+- supports homogeneous and heterogeneous (need SCT) migrations
+
+## Amazon EMR - elastic map reduce
+- big data platform
+- peta byte scale analysis
+- cluster of ec2 nodes - each node has own role to play, own s/w installed
+- node types
+    - master node - manages cluster, track tasks, health check
+    - core node - run tasks and store data - mandatory
+    - task node - run tasks but not store data - optional
+- each node talks to each other
+- logs is on master node - u need to periodically archive to S3 to ensure u dont loose it in case the node dies
+    - this way logs will be there even after cluster terminates - otherwise lost
+    - EMR archives every 5min
+    - u can set it up ONLY when u first create cluster - not later
+
 ## VPC
 - network ACL - STATELESS
 
@@ -216,3 +304,6 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - root vol type - EBS or instance store (INS)
     - for EBS - snapshot on S3
     - for INS - template on S3
+- any serverless pricing is always by use (invocation) - otherwise its by hr/minute
+- who has caching - cloud front, api gateway, elastic cache, DAX
+    - the more caching u provide in the arch in the front, the less load on DB or backend
