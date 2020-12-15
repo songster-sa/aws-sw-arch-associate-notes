@@ -339,6 +339,83 @@ https://github.com/songster-sa/aws-developer-associate-notes
 
 ## VPC
 - network ACL - STATELESS
+- internet gateway / VP gateway -> router -> route tables -> network ACL -> instances in public / private subnets via their security groups
+- jump boxes / bastion hosts = ec2 instances in public SN via which u can ssh/rdp into instances in private SN
+    - nothing to do on public instance - harden bastion host
+    - just open access on private instance via security group (add inbound rules from public SN)
+    - bad practice to save key-pair on public instance
+    - can shh into - but priv still cant access internet
+- aws allows max /16 SN CIDR - /28 is the smallest
+- aws gives default VPC - all subnets are public / internet accessible - each instance has both public and private IP
+    - if you delete by mistake its recoverable
+- when creating VPC
+    - u get option to use dedicated hardware or default (sharing)
+    - creates route table, network ACL, security group
+- when creating SN - by default private - u assign public IP to make it public
+- when creating internet gateway - by default detached - u need to attach to ur vpc
+    - only 1 per vpc
+- should always leave the main / default route table private - so anything new create is not public
+    - create new route table - add outgoing public route (target is internet gateway) - and then associate subnets to it
+    - 1 SN can be associated to only 1 route table at a time
+- security group do not span across vpc - not visible outside ur vpc
+- NAT instances vs NAT gateways
+    - NATi 
+        - can be create by using apt ami - add to public SN - inc instance size if req
+        - as its ec2, has a security group
+        - disable src/dest checks
+        - add to default/main/private route table - saying if someone wants to go out, use NATi as target
+    - NATg - create and add route to default/main/private route table 
+        - 1 per AZ - scales automatically
+        - ur ec2 can be across AZs..and connected to 1 NATg - but if that AZ goes down, all will loose internet access - so better have 1 NATg per AZ
+- nACL - allow rules, deny rules, stateless
+    - user created nacl - deny everything by default
+    - aws created default nacl - allowed everything by default
+    - 1 sub can be associated with 1 nacl (vice versa is not true)
+    - rules are evaluated in order (its first come first serve .. if u want to deny put if before allow)
+    - ephimeral ports - temp ports for communication out of server
+    - as security groups dont have deny rules, to block any ip, its best to use nacl
+- you need atleast 2 public subnets in order to create an internet facing ALB
+    - ALB creation gives option if ALB is for internal use or internet facing
+    - if u choose private SN for internet-facing - its a miss match
+- flow logs 
+    - if u want flow logs for vpc peering, then both vpc have to be in same account
+    - once flow log created - cannot change config later on
+    - not logged - aws DNS, windows license server, 169.254.169.254, DHCP, reserved IP address
+- direct connect : client router -> partner router -> DX router -> aws public / vpc private
+    - DX console - public VI
+    - VPC console - customer gateway
+    - VP gateway - attach to vpc
+    - create VPN tieing VP gateway and customer gateway
+    - setup the VPN on customer site / firewall
+- Global Accelerator
+    - gives 2 static IPs or u can bring ur own
+    - no ISP-DNS resolution to resolve aws urls
+    - ur can use IPs or GA'S DNS name
+    - network zone - similar to AZ
+    - listeners (port, protocol, client affinity), endpoint grps per region (traffic dial), endpoints (ALB, EC2 - can have weighted endpoints as well)
+- vpc endpoints - connecting to aws resources need not leave aws n/w
+    - 2 types - interface endpoints (via ENI priv IP) ; gateway endpoints (s3 and dynamo db)
+    - after creating, use --region in CLI command to access
+- VPC private link - open up ur service (sitting in ur vpc) to 100s or other vpcs
+    - one way - open to public via internet - bad for security
+    - 2nd way - peering - will have to set up 100 peering connections
+    - private link : ur vpc -> NLB -> ENI -> customer vpc
+- transit gateway
+    - simplify n/w arch / topology
+    - transitive peering - hub-and-spoke model
+    - regional, or cross region, or cross aws accounts
+    - use route tables to control
+    - works with DX , VPN connections
+    - only aws service that supports IP multicast
+- VPN cloud Hub
+    - multiple sites with VPN among them and vpc connection via VP gateway
+    - hub-and-spoke model
+    - operates over public internet but all traffic is encrypted
+- network costs
+    - cross AZ is charged - within AZ is free
+    - private IP is cheaper than public IP (going out to public internet and then coming in)
+    - 1 vpc to another vpc is charged as well
+    - all traffic coming in vpc is free
 
 ## Random points
 - aws account creation - support types 4
@@ -366,3 +443,12 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - who has caching - cloud front, api gateway, elastic cache, DAX
     - the more caching u provide in the arch in the front, the less load on DB or backend
 - ARN - arn:partition:service:region:account_id:resource_type/resource
+- aws randomises AZ name - so my 2a may be diff from ur 2a
+- aws reserves 5 addresses in ur CIDR range (256 becomes 251 available)
+    - 10.0.0.0 - n/w address
+    - .1 - router
+    - .2 - DNS
+    - .3 - future use
+    - .255 - broadcast
+- common port numbers - 80,443,22, 3306(aurora)
+- every ec2 instance has a check to confirm its either src or dest of traffic
