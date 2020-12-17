@@ -27,13 +27,13 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - [AWS Directory Service](#AWS-Directory-Service)
 - [AWS Resource Access Manager](#AWS-Resource-Access-Manager)
 - [AWS SSO](#AWS-SSO)
-- [](#)
-- [](#)
-- [](#)
-- [](#)
-- [](#)
-- [](#)
 - [VPC](#VPC)
+- [On-premise strategies](#On-premise-strategies)
+- [Elastic transcoder](#Elastic-transcoder)
+- [](#)
+- [](#)
+- [](#)
+- [](#)
 - [Random points](#Random-points)
 - [](#)
 
@@ -416,6 +416,27 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - private IP is cheaper than public IP (going out to public internet and then coming in)
     - 1 vpc to another vpc is charged as well
     - all traffic coming in vpc is free
+- NLB (with auto scaling) for multiple bastions - as they are for ssh/rdp = layer 4 - but this is expensive option
+    - cheaper - 1 bastion with EIP - behind auto scaling of 1 min/max - then new instance will be created only when its lost and with same EIP
+    - but will have some down time
+
+## On-premise strategies
+- DMS - db migration service
+- SMS - server migration service
+    - incremental replication of on-prem server
+- application discovery service
+    - helps plan the migration
+    - install "app discovery agentless connector" - on to ur vmware
+    - it will create (server utilization and dependency) map of everything - store encrypted
+    - data also available to "migration hub"
+- VM import/export
+    - app to ec2 and vice versa
+- can download your amazon linux2 as ISO - take ec2 and run on prem
+
+## Elastic transcoder
+- media transcoder - convert media formats
+- pay by minute and resolution
+- s3 -> lambda -> transcoder -> another s3 bucket
 
 ## Random points
 - aws account creation - support types 4
@@ -452,3 +473,26 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - .255 - broadcast
 - common port numbers - 80,443,22, 3306(aurora)
 - every ec2 instance has a check to confirm its either src or dest of traffic
+- ASG components - groups, config templates, scaling options
+- scaling options
+    - maintain current levels(no of instance) all time
+    - scale manually - mention min/desired capacity
+    - scale on demand - define params to control
+    - scale on schedule
+    - scale on prediction
+- when making HA arch :
+    - aws s3 cp --recursive /var/www/html s3://bucket-name
+    - .htaccess file - contains url rewrite to route meant for s3 to go to cloudfront
+    - aws s3 sync /var/www/html s3://bucket-name
+    - tell httpd that we allow url rewrite
+    - for auto polling - write command in /etc/crontab file
+- test RDS failover by simply rebooting 
+- Quick Start - has bunch of cloud formation templates for various use cases
+- elastic beanstalk - no infra, no template - just upload code and it will figure out what to do and provision everything
+    - all auto scaling etc can be done from its UI
+- SQS - used to decouple components
+- same origin policy - is done by browser to prevent cross-site-scripting attacks
+    - but in aws all resources have own domains - so allow CORS - for somethings like fonts
+    - enabled at server side (not client or browser side) - but enforced by client / browser
+    - HTTP OPTIONS - there are the domain approved - error = origin policy cannot be read at the remote resource = then allow CORS
+    
