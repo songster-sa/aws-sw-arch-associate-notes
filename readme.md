@@ -30,12 +30,9 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - [VPC](#VPC)
 - [On-premise strategies](#On-premise-strategies)
 - [Elastic transcoder](#Elastic-transcoder)
-- [](#)
-- [](#)
-- [](#)
-- [](#)
+- [Reduce security threats](#Reduce-security-threats)
+- [Lambda](#Lambda)
 - [Random points](#Random-points)
-- [](#)
 
 ## IAM
 - policies - effect, action, resource
@@ -438,6 +435,55 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - pay by minute and resolution
 - s3 -> lambda -> transcoder -> another s3 bucket
 
+## Reduce security threats
+- ALB
+    - NACL -> ALB -> ec2 (coz client connection terminates at ALB so ec2 wont get to know)
+    - WAF -> ALB -> ec2
+- NLB
+    - NACL -> NLB -> ec2 (NLB does not block connection - so IP add is visible end to end)
+- cloud front
+    - WAF -> cloud front -> NACL -> ALB -> ec2 (againt the conn terminates at CF - so use WAF)
+- NACL only deals with IPs and WAF handles other things as well (XSS, SQL inj etc) - so choose accordingly
+- KMS - FIPS 140-2 level 2
+    - once u encrypt file - when u decrypt u dont need to mention key/alias again as its kept in the metadata
+    - u will always have to decode base64
+    - --key-id "alias/acgDemo"
+    - multi tenant - uses cloud HSM internally but HSM is shared
+- cloud HSM - FIPS 140-2 level 3 - dedicated HSM
+    - manage ur own keys
+    - single tenant multi AZ
+    - standard industry API - no aws APIs - PKCS#11 / JCE / CNG
+    - aws is not aware of ur keys - u need to keep them safe
+    - u create one HSM per AZ (for DR) and HSM exposes ENI - which u use to communicate
+- SMPS - component of Systems manager
+    - manages configs and secrets - caches and distributing to aws resources
+    - serverless - scalable
+    - can be encrypted KMS
+    - hierarchy, version, TTL
+    - grant access to hierarchy tree - a leaf or level etc - 15 levels deep - GetParametersByPath
+    - integrated with cloud formation
+    - standard - limit of 10k params, value size 4kb
+    - advances - > 10k, 8kb
+    - types - string, string list, secure string
+    
+## Lambda
+- if 10 users trigger lambda - 10 functions run - thats how it scales automatically (1 event = 1+ function)
+- first 1 million requests are free - after than 0.20$ per 1 million requests
+- for usage - u r charged per GB-second usage (ie how much memory u allocated + whats the duration of the function)
+- what can trigger lambda - 
+    - API gateway , IOT, ALB
+    - cloud watch events, logs
+    - code commit
+    - congnito sync
+    - dynamodb, kinesis
+    - S3, SNS, SQS
+    - alexa skill
+- what cant trigger lambda - RDS
+- can use cloud trail, x-ray 
+- lambda is global
+- SAM - cloud formation extension for serverless
+    - sam init, sam build, sam deploy --guided
+
 ## Random points
 - aws account creation - support types 4
     - basic , developer, business, enterprise
@@ -495,4 +541,6 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - but in aws all resources have own domains - so allow CORS - for somethings like fonts
     - enabled at server side (not client or browser side) - but enforced by client / browser
     - HTTP OPTIONS - there are the domain approved - error = origin policy cannot be read at the remote resource = then allow CORS
-    
+- so when you create a key - you assign a role for who can manage it (admin) and another role for who can use it
+    - this useage-role can become the execution role of lambda - it should have the key usage permissions in its policy
+- lambda, ec2, ecs - support hyper-threading
