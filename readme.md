@@ -135,14 +135,15 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - creates dashboards, reports and alerts
 
 ## EC2
-- Spot instances - if aws stops then u r not charged for the partial hr
-    - Spot block - 1-6hr to decide
+- Spot instances - huge saving 90%
+    - if aws stops then u r not charged for the partial hr - based on spot price - 2 min to decide stop or terminate
+    - Spot block - 1-6hr block
     - Spot Request - one time or persistent
     - Spot fleet - spot instances + on demand instances
-- Spot instance strategies
+- Spot instance strategies for the fleet
     - capacity optimised
     - lowest price - default
-    - diversified
+    - diversified - distribute across all launch-pools defined
     - instance pools to use count
 - EC2 instance connect - tool
 - Status checks
@@ -157,21 +158,43 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - VF - <10 Gps
     - ENA - 10-100Gps
 - EFA - elastic fabric adapter - for HPC + machine learning - for OS bypass
-- EC2 hibernate 
+- EC2 hibernate (diff between stop , terminate, hibernate)
     - saves RAM to root vol - root vol should be encrypted
+    - OS is not stopped
     - for on-demand and reserved instances
     - max 60 days
     - RAM <= 150GB
+    - available for only C, M, R instances
 - Placement groups
     - all PGs have to be in same region
     - name has to be unique within ur account
     - cannot merge PGs
     - can move an outside ec2 inside - STOP + CLI or SDK - confirm?
     - types
-        - cluster - all in same AZ - high n/w throughputs
-        - spread - each on diff hardware - 7 max per AZ - can span across AZ
-        - partition - mix - each partition on diff hardware but 1 partition can many many ec2 - can span across AZ
-
+        - cluster - all in same AZ - high n/w throughputs - only available for high instance types
+        - spread - each instance on diff hardware - 7 max per AZ - can span across AZ
+        - partition - mix - each partition on diff hardware but 1 partition can many many ec2 - 1 AZ max 7 partition 
+            - can span across AZ ????
+            - for distributed databases like cassandra,kafka, hadoop etc
+- Instance types
+    - R - RAM - in-memory caches
+    - C - CPU - compute / databases
+    - M - middle - general / web app
+    - I - I/O - instance store / databases
+    - G - GPU - video rendering / machine learning
+    - T2 T3 burstable
+    - T2 T3 unlimited burst - but u pay for it
+- AMIs - region specific - by default all private and live in S3
+    - u can share with other accounts - u own ami
+    - if they copy - they own the copied ami (add create-volume permission checkbox)
+    - to copy 
+        - u need access to backed storage ( EBS or S3 )
+        - OR - u launch instance and then create new AMI from that 
+    - encrypted AMI - cant copy 
+        - share storage snapshot and encrypted key - copy this snapshot and re-encrypt with own key
+        - then register as new AMI
+    - billing product AMI - cant copy - launch instance and create AMI form there
+  
 ## EBS
 - gp2 , io1, st1, sc1, standard
 - root vol is always in same AZ as ec2 - comes from ami snapshot
@@ -520,6 +543,8 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - common port numbers - 80,443,22, 3306(aurora)
 - every ec2 instance has a check to confirm its either src or dest of traffic
 - ASG components - groups, config templates, scaling options
+    - can define lifecycle hooks at pending-wait / termination-wait
+    - when removing an instance - 1st the zone with max instances is chosen, then the instance with oldest launch config is terminated
 - scaling options
     - maintain current levels(no of instance) all time
     - scale manually - mention min/desired capacity
@@ -544,3 +569,4 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - so when you create a key - you assign a role for who can manage it (admin) and another role for who can use it
     - this useage-role can become the execution role of lambda - it should have the key usage permissions in its policy
 - lambda, ec2, ecs - support hyper-threading
+- important port - 22, 80, 433, 

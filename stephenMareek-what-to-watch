@@ -1,0 +1,51 @@
+Please watch the following lectures:
+
+Section 3
+
+Spot Instances & Spot Fleet (/)
+
+EC2 Instance Types Deep Dive
+
+EC2 AMIs
+
+EC2 AMI Hands On
+
+Cross Account AMI Copy
+
+EC2 Placement Groups
+
+EC2 Hibernate
+
+EC2 Hibernate - Hands On
+
+EC2 for the Solution Architect
+
+Section 4
+
+Auto Scaling Groups - for Solutions Architects
+
+Section 5
+
+EBS Operation: Snapshots
+
+EBS Operation: Volume Migration
+
+EBS Operation: Volume Encryption
+
+EBS RAID configurations
+
+Section 6
+
+ElastiCache for Solution Architect
+
+List of Ports to be familiar with
+
+Section 7
+
+3rd Party Domains & Route 53
+
+Section 8
+
+all lectures
+
+Then you can skip all the way to CloudFront (Section 12).
