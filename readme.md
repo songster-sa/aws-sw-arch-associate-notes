@@ -15,7 +15,8 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - [Storage Gateway](#Storage-Gateway)
 - [Athena vs Macie](#Athena-vs-Macie)
 - [EC2](#EC2)
-- [EBS](#EBS)
+- [EBS](#EBS
+- [Elastic Cache](#Elastic-Cache)
 - [EFS](#EFS)
 - [HPC - high performance compute architecture](#HPC---high-performance-compute-architecture)
 - [RDS](#RDS)
@@ -194,17 +195,27 @@ https://github.com/songster-sa/aws-developer-associate-notes
         - share storage snapshot and encrypted key - copy this snapshot and re-encrypt with own key
         - then register as new AMI
     - billing product AMI - cant copy - launch instance and create AMI form there
-  
+- ASG components - groups, config templates, scaling options
+    - can define lifecycle hooks at pending-wait / termination-wait
+    - when removing an instance - 1st the zone with max instances is chosen, then the instance with oldest launch config is terminated
+    - launch template (new, versioned, params, mix instances) vs launch config (legacy, recreate everytime) 
+
 ## EBS
 - gp2 , io1, st1, sc1, standard
 - root vol is always in same AZ as ec2 - comes from ami snapshot
 - u can change size/storage of vols on the fly - take some time
-- how to move vol to another AZ - 
+- by default vols are AZ locked
+- how to move vol to another AZ - take snapshot, copy it to diff az (optional step), create volume from it (can create without copying to az as well)
 - how to move vol to another region -
 - can detach EBS on fly or after stopping ?
 - snapshots 
     - on S3, always incremental
     - can take on fly or after stopping
+    - max 100,000 snapshots
+    - can copy across AZ or region
+    - can create AMI
+    - need to be pre-warmed when restoring
+    - can be automated via Amazon Data Lifecycle Manager
 - Instance Store (INS) 
     - has to be added at ec2 creation time - cannot add later
     - volume dashboard wont show
@@ -213,6 +224,25 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - how to create encrypted vol from unencrypted vol
 - u can share only unencrypted vols
 - 1 EBS can be attached to many EC2 - possible since feb 2020
+- when you encrypt a vol, you get :
+    - data at rest encrypted
+    - data on fly encrypted
+    - snapshots encrypted
+    - vols created from snapshots are encrypted
+- how to create encrypted vol from an unencrypted vol
+- RAID options (Redundant array of independent disks)
+    - OS needs to support (linux, windows)
+    - RAID 0 = striping = for inc performance - when u need lot of IOPs but not fault tolerance - everything summed up
+    - RAID 1 = mirroring = for inc fault tolerance - everything remains same as 1 vol (not summed up or divided)
+
+## Elastic Cache
+- Security
+    - support SSL in flight
+    - do not support IAM authentication
+    - IAM policies only used for API-level security
+- Redis AUTH - password/token created when creating cluster - security on top of security groups
+    - by default Redis has no auth - so use security groups
+- MemcacheD - SASL based authentication
 
 ## EFS
 - amazon-efs-utils tool to mount on various ec2s
@@ -356,6 +386,10 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - u can set health checks - if fails then route is taken out until it passes
 - Geo-proximity routing - traffic flow only - create traffic policies
     - geo based + bias setting
+- Domain registrar VS DNS - Route 53 offers both services
+- how to use route53 with a 3rd party domain registrar
+     - create Hosted Zone in route 53
+     - update 3rd party name servers to use route53 name servers
 
 ## VPC
 - network ACL - STATELESS
@@ -542,9 +576,6 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - .255 - broadcast
 - common port numbers - 80,443,22, 3306(aurora)
 - every ec2 instance has a check to confirm its either src or dest of traffic
-- ASG components - groups, config templates, scaling options
-    - can define lifecycle hooks at pending-wait / termination-wait
-    - when removing an instance - 1st the zone with max instances is chosen, then the instance with oldest launch config is terminated
 - scaling options
     - maintain current levels(no of instance) all time
     - scale manually - mention min/desired capacity
@@ -569,4 +600,17 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - so when you create a key - you assign a role for who can manage it (admin) and another role for who can use it
     - this useage-role can become the execution role of lambda - it should have the key usage permissions in its policy
 - lambda, ec2, ecs - support hyper-threading
-- important port - 22, 80, 433, 
+- Important ports:
+    FTP: 21
+    SSH: 22
+    SFTP: 22 (same as SSH)
+    HTTP: 80
+    HTTPS: 443
+- vs RDS Databases ports:
+    PostgreSQL: 5432
+    MySQL: 3306
+    Oracle RDS: 1521
+    MSSQL Server: 1433
+    MariaDB: 3306 (same as MySQL)
+    Aurora: 5432 (if PostgreSQL compatible) or 3306 (if MySQL compatible)
+
