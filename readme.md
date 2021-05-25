@@ -15,7 +15,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - [Storage Gateway](#Storage-Gateway)
 - [Athena vs Macie](#Athena-vs-Macie)
 - [EC2](#EC2)
-- [EBS](#EBS
+- [EBS](#EBS)
 - [Elastic Cache](#Elastic-Cache)
 - [EFS](#EFS)
 - [HPC - high performance compute architecture](#HPC---high-performance-compute-architecture)
@@ -33,6 +33,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - [Elastic transcoder](#Elastic-transcoder)
 - [Reduce security threats](#Reduce-security-threats)
 - [Lambda](#Lambda)
+- [Container on AWS] (#Container-on-AWS)
 - [Random points](#Random-points)
 
 ## IAM
@@ -78,6 +79,9 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - path style
     - Static web
     - legacy global endpoint
+- S3 analytics - move from standard to standard IA (takes 24-48hr to take affect)
+- event notifications - SNS, SQS, lambda
+- Requester pays bucket - owner pays for storage cost but requester pays for n/w cost on download
 
 ## Data Sync
 - agent on on-premise system
@@ -199,7 +203,14 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - can define lifecycle hooks at pending-wait / termination-wait
     - when removing an instance - 1st the zone with max instances is chosen, then the instance with oldest launch config is terminated
     - launch template (new, versioned, params, mix instances) vs launch config (legacy, recreate everytime) 
-
+- every ec2 instance has a check to confirm its either src or dest of traffic
+- scaling options
+    - maintain current levels(no of instance) all time
+    - scale manually - mention min/desired capacity
+    - scale on demand - define params to control
+    - scale on schedule
+    - scale on prediction
+    
 ## EBS
 - gp2 , io1, st1, sc1, standard
 - root vol is always in same AZ as ec2 - comes from ami snapshot
@@ -541,6 +552,43 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - SAM - cloud formation extension for serverless
     - sam init, sam build, sam deploy --guided
 
+## Container on AWS
+- docker (on ec2)
+    - images at dockerhub(public) or amazon ECR (public or private)
+    - container share resources (unlike VMs) when multiple run on same infrastructure
+    - docker container management
+        - ECS 
+        - Fargate
+        - EKS
+- ECS - helps to decide where (out of many ec2s) to launch, when to start / stop, ALB integrated
+    - launch types
+        - basic - u provision/manage/launch ec2 instances under ASG 
+                - these should have ECS agent in them - and then agent can launch tasks
+        - fargate - just use the fargate service to launch tasks
+                - no need for u to provision ec2
+                - fargate will provision/manage
+                - to access the tasks - use ENI - 1 per task - so we need big enough vpc to have free ips
+    - IAM roles
+        - ec2 instance role - for ecs agent (for ecs, ecr, cloud watch etc)
+        - task roles - 1 per task
+    - can share data between tasks using EFS
+- Load balancing
+    - basic
+        - dont assign ports to tasks - let them be assigned randomly
+        - ALB can do magic to find out the right task
+        - on ec2 SG , allow traffic from ALB on any port
+    - fargate
+        - ENIs will be accepting traffic on 80/443
+        - on ENI SG, allow traffic from ALB on 80/443
+- can launch tasks via event bridge / cloud watch events (fargate)
+- ECS scaling
+    - service scaling - ASG set up at service level
+    - ECS capacity provider scaling - ASG set up at ec2 level
+- service updates - rolling update
+    - min and max %
+- EKS - service to manage kubernetes clusters
+    - is open source, cloud agnostic
+        
 ## Random points
 - aws account creation - support types 4
     - basic , developer, business, enterprise
@@ -575,13 +623,6 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - .3 - future use
     - .255 - broadcast
 - common port numbers - 80,443,22, 3306(aurora)
-- every ec2 instance has a check to confirm its either src or dest of traffic
-- scaling options
-    - maintain current levels(no of instance) all time
-    - scale manually - mention min/desired capacity
-    - scale on demand - define params to control
-    - scale on schedule
-    - scale on prediction
 - when making HA arch :
     - aws s3 cp --recursive /var/www/html s3://bucket-name
     - .htaccess file - contains url rewrite to route meant for s3 to go to cloudfront

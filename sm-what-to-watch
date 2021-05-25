@@ -31,3 +31,68 @@ Section 8
 - all lectures
 
 Then you can skip all the way to CloudFront (Section 12).
+---------------------------------------------------
+Please watch the following lectures: 26 may 2021
+
+Section 6 - EC2 - Solutions Architect Associate Level
+- Private vs Public vs Elastic IP
+- Private vs Public vs Elastic IP Hands On
+- Spot Instances & Spot Fleet (/)
+- EC2 Placement Groups (/)
+- Elastic Network Interfaces (ENI) with Hands On
+- ENI - Extra Reading
+- EC2 Hibernate (/)
+- EC2 Hibernate - Hands On (/)
+- EC2 - Advanced Concepts (Nitro, vCPU, Capacity Reservations)
+
+Section 7 - EC2 Instance Storage
+- EBS Operation: Volume Encryption (/)
+- EBS RAID configurations (/)
+
+Section 8 - High Availability and Scalability: ELB & ASG
+- Auto Scaling Groups - for Solutions Architects (/)
+
+Section 9 - AWS Fundamentals: RDS + Aurora + ElastiCache
+- Aurora - Advanced Concepts
+- ElastiCache for Solution Architects (/)
+- List of Ports to be familiar with (/)
+
+Section 10 - Route 53
+- 3rd Party Domains & Route 53 (/)
+
+Section 11 - Classic Solutions Architecture Discussions
+- Solutions Architecture Discussions Overview
+- WhatsTheTime.com
+- MyClothes.com
+- MyWordPress.com
+- Instantiating applications quickly
+- Beanstalk Overview
+- Beanstalk Hands On
+
+Section 14 - Advanced Amazon S3 & Athena
+- S3 Analytics (/)
+- S3 Select & Glacier Select (/)
+- S3 Requester Pays (/)
+
+Section 15 - CloudFront & AWS Global Accelerator
+- AWS Global Accelerator - Overview
+- AWS Global Accelerator - Hands On
+
+Section 16 - AWS Storage Extras
+- AWS Snow Family Overview
+- AWS Snow Family Hands On
+- Architecture: Snowball into Glacier
+- Storage Gateway Overview
+- Storage Gateway Hands On
+- Amazon FSx - Overview
+- Amazon FSx - Hands On
+- All AWS Storage Options Compared
+
+Section 17 - Decoupling applications: SQS, SNS, Kinesis, Active MQ
+- SQS - Request Response
+- SQS + Auto Scaling Group
+- Kinesis Overview
+- Kinesis Data Streams Hands On
+- Amazon MQ
+
+And everything from section 18 onwards.
