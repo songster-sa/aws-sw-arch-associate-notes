@@ -33,17 +33,65 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - [Elastic transcoder](#Elastic-transcoder)
 - [Reduce security threats](#Reduce-security-threats)
 - [Lambda](#Lambda)
-- [Container on AWS] (#Container-on-AWS)
+- [Container on AWS](#Container-on-AWS)
 - [Random points](#Random-points)
 
 ## IAM
 - policies - effect, action, resource
     - identity policy - attached to iam user/roles/grps
+        - principal will have to assume the role - hence give up his original permissions
     - resource policy - attached to resources
+        - principal does not have to give up his permissions
 - permission boundaries - delegate admin
-    - can be set only for IAM users/ roles
+    - can be set only for IAM users/ roles (NOT FOR GROUPS)
     - dont allow or deny - simply define the max perm entity can have
     - if present then this takes priority and is final
+- general iam permissions     
+    - bucket level vs object level permission
+- AWS STS 
+    - token for temporary access to AWS resources (15min-1hr)
+    - Assume Role
+        - within own account
+        - cross account access
+        - AssumeRoleWithSAML
+        - AssumeRoleWithWebIdentity - Cognito recommended instead
+        - GetSessionToken
+- Identity federation
+    - lets users outside aws to assume temporary role for accessing aws resources
+    - user mngmt is in 3rd party - aws trusts that party
+    - types
+        - for on premise users
+            - SAML2.0 - compatible AD - SAML assertion - AssumeRoleWithSAML/browser-console
+            - Custom Identity Broker - custom app u write talks to STS - AssumeRole or GetFederationToken api
+        - for online users
+            - WebIF with cognito
+                - login using any web identity provided (google/fb/saml/openID/cup - cognito user pool)
+                - give token to federated identity pool - this will talk to STS and return creds
+            - WebIF without cognito - AssumeRoleWithWebIdentity 
+        - Single Sign on
+        - Non-SAML with AWS Microsoft AD
+- AWS Organization
+    - masterc account vs member accounts
+    - paying account /consolidated billing
+    - pricing benefits
+    - api to automate account creation
+    - SCP (service control policy) - to enable/disable services on OU / member accounts
+        - not affective on service-linked roles
+        - to allow, need to explicitly 
+        - looks like IAM policy - works in a hierarchial manner (OU tree)
+    - Organizational Unit
+    - Migrate accounts - remove, invite, accept
+- IAM conditions - mention in policy definition json
+    - aws:SourceIP
+    - aws:RequestedRegion
+    - based on tags
+    - aws:MultiFactorAuthPresent
+- IAM Policy evaluation logic
+    - ANYWHERE explicit deny -> deny final
+    - by default everything is DENY
+    - SCP -> resource based policies -> perm boundaries -> session policies -> identity based policies
+    - SRBSI
+
 
 ## S3
 - components - key, value, versionId, metadata, tiers, lifecycle mgmt, versioning, encryption
@@ -364,26 +412,30 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - u can SSO to all ec2 instance joined to your AD domain - using AD Connectors (directory gateway)
 - What is AD - users, groups, policies, LDAP and DNS, kerberos auth, high availability
 - AWS managed Microsoft AD Domain Controllers - run on windows - in multi AZ (default 2)
+    - has MFA
     - extend aws AD to on-premise AD using AD Trust
     - u have to take care of only the data eg users, groups, policies, scaling DC, AD Trust, LDAPS (certificate authority), federation
     - aws takes of - multi AZ, patching, snapshot and restore, instance rotation
-- Simple AD
-    - basic AD features
+- AD connector - Directory Gateway (proxy) - users are all managed in the on-premise AD
+- Simple AD - stand alone
+    - basic AD features (api)
     - small <=500 users, large <=5000 users
     - does not support AD Trust
-- CLoud Directory - fully managed directory-based store for developers
+    - no on-premise AD
+- Cloud Directory - fully managed directory-based store for developers
     - for apps which create/use/work with org charts, catalogs, registries
     - not AD compatible
 
 ## AWS Resource Access Manager
-- share resource access across aws accounts
-- App Mesh, Aurora, CodeBuild, EC2, EC2 image builder, License manager, Resource Groups, Route 53
+- share resource access across aws accounts (within organisation)
+- App Mesh, Aurora, CodeBuild, EC2, EC2 image builder, License manager, Resource Groups, Route 53, Transit gateway
 - use RAM in account 1 - share - go in RAM account 2 - accept the invitation to share
 - only share access - cannot change the resource - so clone DB in own account to use
+- eg vpc subnet - share n/w access - access each other using private IPs
 
 ## AWS SSO
-- SSO for all aws accounts + external apps (office, salesforce etc)
-- integrate with on-premise AD, or any SAML provider
+- SSO for all aws accounts + external apps (office, salesforce, slack, dropbox etc)
+- integrate with on-premise AD, or any SAML2.0 provider
 - all logins recorded in Cloud Trail
 - use existing identities to login various apps
 
@@ -588,7 +640,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - min and max %
 - EKS - service to manage kubernetes clusters
     - is open source, cloud agnostic
-        
+
 ## Random points
 - aws account creation - support types 4
     - basic , developer, business, enterprise
@@ -598,9 +650,6 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - SNS notification
 - global services - IAM, S3, CloudFront, 
 - can make architecture super secure by using multiple aws accounts
-- AWS Organization
-    - paying account
-    - SCP (service control policy) - to enable/disable services on accounts
 - using SAML u can give ur federated users SSO access to AWS mgmt console
 - IAM power user - access to all services except IAM users, groups
 - when creating ami - virtualization has 2 options
@@ -654,4 +703,20 @@ https://github.com/songster-sa/aws-developer-associate-notes
     MSSQL Server: 1433
     MariaDB: 3306 (same as MySQL)
     Aurora: 5432 (if PostgreSQL compatible) or 3306 (if MySQL compatible)
+- AWS Glue - ETL service (extract, transform, load) - serverless
+    - Glue data catalog - can be used by Athena, Redshift, EMR, 
+    - Glue data crawler
+    - Glue Jobs
+- AWS Neptune - graph database - used for highly linked / related data (social n/w, wikipedia)
+    - most properties similar to RDS
+- Elastic Search - ELK stack (elastic search, kibana, logstash)
+    - most properties similar to RDS
+- cloud watch vs cloud trail vs config
+    - cw - global audit - performance monitoring, events, alerts, log aggregation, analysis
+    - ct - cctv - records api calls, define trails
+    - config - records config changes, eval against compliance rules, timeline 
+
+
+
+
 
