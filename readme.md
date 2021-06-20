@@ -453,6 +453,22 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - how to use route53 with a 3rd party domain registrar
      - create Hosted Zone in route 53
      - update 3rd party name servers to use route53 name servers
+     
+## CIDR
+- /32 = 2^0 = 1 IP only
+- /24 = 2 ^ (32-24=8) = last part can change
+- /16 = 2 ^ (32-16=16) = last 2 parts can change
+- /0 = 2 ^ 32 = all IPs
+- private IPs
+  - 10.0.0.0/8     - for big networks
+  - 172.16.0.0/12  - default AWS
+  - 192.168.0.0/16 - home network
+        
+## VPC General
+- max 5 VPC per region -  soft limit
+- max 5 CIDR per vpc - max /16 : min /28
+- VPC is private - so Private IP ranges available
+- should not overlap with you other/corporate LAN/private IPs
 
 ## VPC
 - network ACL - STATELESS
@@ -462,19 +478,33 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - just open access on private instance via security group (add inbound rules from public SN)
     - bad practice to save key-pair on public instance
     - can shh into - but priv still cant access internet
-- aws allows max /16 SN CIDR - /28 is the smallest
-- aws gives default VPC - all subnets are public / internet accessible - each instance has both public and private IP
+- security group do not span across vpc - not visible outside ur vpc  
+  
+## VPC creation
+- aws gives **default VPC** - all subnets are public / internet accessible - each instance has both public and private IP
     - if you delete by mistake its recoverable
-- when creating VPC
-    - u get option to use dedicated hardware or default (sharing)
+- Step 1 - creating VPC
+    - u get option to use dedicated hardware or default (sharing) - "tenancy" option
     - creates route table, network ACL, security group
-- when creating SN - by default private - u assign public IP to make it public
-- when creating internet gateway - by default detached - u need to attach to ur vpc
+- Step 2 - creating Subnet
+    - subnet is associated with AZs
+    - 1 AZ = 1 Private subnet (instances) + 1 Public subnet (load balancers only)  
+    - by default private - u assign public IP to make it public
+    - aws reserves 5 addresses in ur CIDR range (256 becomes 251 available)
+      - 10.0.0.0 - n/w address
+      - .1 - router
+      - .2 - DNS
+      - .3 - future use
+      - .255 - broadcast
+- Step 2.5 - if you create an EC2 here, in ur public submet - wont be able to ssh as no internet  
+- Step 3 - creating internet gateway - also serves as NAT
     - only 1 per vpc
-- should always leave the main / default route table private - so anything new create is not public
-    - create new route table - add outgoing public route (target is internet gateway) - and then associate subnets to it
+    - by default detached - u need to attach to ur vpc
+- Step 4 - create new route table
+    - should always leave the main / default route table private - so anything new create is not public
+    - may have 1 private route table and 1 public route table
+    - create route to igw - add outgoing public route (target is internet gateway) - and then associate subnets to it
     - 1 SN can be associated to only 1 route table at a time
-- security group do not span across vpc - not visible outside ur vpc
 - NAT instances vs NAT gateways
     - NATi 
         - can be create by using apt ami - add to public SN - inc instance size if req
@@ -665,12 +695,6 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - the more caching u provide in the arch in the front, the less load on DB or backend
 - ARN - arn:partition:service:region:account_id:resource_type/resource
 - aws randomises AZ name - so my 2a may be diff from ur 2a
-- aws reserves 5 addresses in ur CIDR range (256 becomes 251 available)
-    - 10.0.0.0 - n/w address
-    - .1 - router
-    - .2 - DNS
-    - .3 - future use
-    - .255 - broadcast
 - common port numbers - 80,443,22, 3306(aurora)
 - when making HA arch :
     - aws s3 cp --recursive /var/www/html s3://bucket-name
