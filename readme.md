@@ -483,10 +483,10 @@ https://github.com/songster-sa/aws-developer-associate-notes
 ## VPC creation
 - aws gives **default VPC** - all subnets are public / internet accessible - each instance has both public and private IP
     - if you delete by mistake its recoverable
-- Step 1 - creating VPC
+- **Step 1** - creating VPC
     - u get option to use dedicated hardware or default (sharing) - "tenancy" option
     - creates route table, network ACL, security group
-- Step 2 - creating Subnet
+- **Step 2** - creating Subnet
     - subnet is associated with AZs
     - 1 AZ = 1 Private subnet (instances) + 1 Public subnet (load balancers only)  
     - by default private - u assign public IP to make it public
@@ -497,22 +497,29 @@ https://github.com/songster-sa/aws-developer-associate-notes
       - .3 - future use
       - .255 - broadcast
 - Step 2.5 - if you create an EC2 here, in ur public submet - wont be able to ssh as no internet  
-- Step 3 - creating internet gateway - also serves as NAT
+- **Step 3** - creating internet gateway - also serves as NAT
     - only 1 per vpc
     - by default detached - u need to attach to ur vpc
-- Step 4 - create new route table
+    - public SN will get access to internet
+- **Step 4** - create new route table
     - should always leave the main / default route table private - so anything new create is not public
     - may have 1 private route table and 1 public route table
     - create route to igw - add outgoing public route (target is internet gateway) - and then associate subnets to it
     - 1 SN can be associated to only 1 route table at a time
-- NAT instances vs NAT gateways
+- **Step 5** - NAT instances (outdated) vs NAT gateways
     - NATi 
-        - can be create by using apt ami - add to public SN - inc instance size if req
+        - can be created by using apt ami - add to public SN - inc instance size if req
         - as its ec2, has a security group
-        - disable src/dest checks
+        - must have elastic IP  
+        - disable the flag - src/dest checks
         - add to default/main/private route table - saying if someone wants to go out, use NATi as target
-    - NATg - create and add route to default/main/private route table 
+        - also add NATi to the public route table with target igw
+        - DISADV - as its an EC2 instance - we will need to make it HA with ASG in multiple AZ and maintain and all
+          - set inbound SG and outbound SG rules etc tec
+    - NATg 
+        - create and add route to default/main/private route table 
         - 1 per AZ - scales automatically
+        - pay per HR for usage and bandwidth  
         - ur ec2 can be across AZs..and connected to 1 NATg - but if that AZ goes down, all will loose internet access - so better have 1 NATg per AZ
 - nACL - allow rules, deny rules, stateless
     - user created nacl - deny everything by default
