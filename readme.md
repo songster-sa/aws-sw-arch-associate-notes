@@ -630,7 +630,13 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - public - you tell route53 that when request comes for example.com - send it to my blah IP
     - private - you tell route53 that when request comes for example.internal - send it to my blah VPC 
       - will go to the ec2 instance with DnsHostname enabled
-
-
-
+- network cost in aws per GB
+    - all incoming is free, outgoing is charged (so keep outgoing min)
+    - within AZ is free as long as its using private IP
+    - cross AZ
+        - 0.02 if using public IP / ENI
+        - 0.01 (half the price) if using private IP
+    - cross region - 0.02
+    - for s3 - using cloud front may be cheaper than transfer accelaration / edge location
+    - if vpc wants to connect to s3 - vpc endpoint is cheaper than NAT (ofcourse as the later goes via internet)
 

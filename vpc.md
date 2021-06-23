@@ -3,6 +3,8 @@
 - [VPC creation](#VPC-creation)
 - [nACL vs security groups](#nACL-vs-security-groups)
 - [DNS resolution](#DNS-resolution)
+- [VPC peering](#VPC-peering) 
+- [VPC endpoints](#VPC-endpoints)
 - [VPC General](#VPC-General)
 - [Connecting to a remote/corporate network](#Connecting-to-a-remote/corporate-network)
 - [VPC Random](#VPC-Random)
@@ -58,6 +60,7 @@
         - 1 per AZ - scales automatically
         - pay per HR for usage and bandwidth
         - ur ec2 can be across AZs..and connected to 1 NATg - but if that AZ goes down, all will loose internet access - so better have 1 NATg per AZ
+        - only for ipv4
 - you need atleast 2 public subnets in order to create an internet facing ALB
     - ALB creation gives option if ALB is for internal use or internet facing
     - if u choose private SN for internet-facing - its a miss match
@@ -88,7 +91,7 @@
 
 ## VPC peering
 - 2 VPC connected privately, over aws network
-- not transitive connection
+- not transitive connection (hence if u have many vpc - use transit gateway)
 - can do across aws account, across region
 - requires BOTH vpc's route table updates
 - allows you to reference SG of peered VPC
@@ -108,6 +111,7 @@
 - max 5 CIDR per vpc - max /16 : min /28
 - VPC is private - so Private IP ranges available
 - should not overlap with you other/corporate LAN/private IPs
+- ipv4 cannot be disabled, but ipv6 can be enabled (dual mode)  
 - internet gateway / VP gateway -> router -> route tables -> network ACL -> instances in public / private subnets via their security groups
 - jump boxes / bastion hosts = ec2 instances in public SN via which u can ssh/rdp into instances in private SN
     - nothing to do on public instance - harden bastion host
@@ -133,6 +137,7 @@
         - create VPN tieing VP gateway and customer gateway
         - setup the VPN on customer site / firewall
     - use customer gw's public IP or if its behind a NAT use NAT's public IP
+    - as VPN - always over public internet
 - **Option 2 - Direct Connect DX**
     - dedicated private connection - not over public internet
     - you will still need a VP gateway on vpc outside
@@ -150,8 +155,10 @@
         - high resiliency - set up DX via 2 DX locations - so if 1 goes down u can use other
         - MAX resiliency - set up DX via 2 DX locations - but in each location have 2 connections (so total 4)
 - **Option 3 - Direct connect to multiple vpcs**
-    - client/customer router -> partner router -> aws DX router -> DX gateway -> can direct to multiple vpcs
+    - client/customer router -> partner router -> aws DX router -> DX gateway -> can direct to multiple vpcs of same account
     - via private virtual interface
+    - client/customer router -> partner router -> aws DX router -> DX gateway -> transit gateway -> can direct to multiple vpcs of multiple accounts
+    - via transit virtual interface
 
 ## VPC Random
 - Global Accelerator
@@ -160,21 +167,34 @@
     - ur can use IPs or GA'S DNS name
     - network zone - similar to AZ
     - listeners (port, protocol, client affinity), endpoint grps per region (traffic dial), endpoints (ALB, EC2 - can have weighted endpoints as well)
-- VPC private link - open up ur service (sitting in ur vpc) to 100s or other vpcs
-    - one way - open to public via internet - bad for security
-    - 2nd way - peering - will have to set up 100 peering connections
-    - private link : ur vpc -> NLB -> ENI -> customer vpc
-- transit gateway
+- VPC private link - VPC endpoint services
+    - open up ur service (sitting in ur vpc) to 100s or other vpcs
+    - one way - make service public via internet - bad for security
+    - 2nd way - peering 
+        - will have to set up 100 peering connections
+        - will open up whole VPC and not just that service
+    - solution - private link : ur vpc -> NLB (in ur vpc) -> aws private link -> 
+        - ENI (of ur cutomer vpc) -> customer vpc
+        - VP gateway
+        - DX gateway / DX 
+- transit gateway = transitive peering
     - simplify n/w arch / topology
     - transitive peering - hub-and-spoke model
     - regional, or cross region, or cross aws accounts
     - use route tables to control
-    - works with DX , VPN connections
+    - works with DX , (site-to-site)VPN connections
     - only aws service that supports IP multicast
+    - ECMP routing strategy 
+        - if using TG with S2S VPN, then u can set up multiple S2S connections between TG and Site
+        - hence increasing the throughput and bandwidth
+        - 1 tunnel = 2 conns = 1.25 Gbps
+        - ECMP = 2 tunnels = 4 conns = 2.5 Gbps
+        - additionally u can add more
 - VPN cloud Hub
-    - multiple sites with VPN among them and vpc connection via VP gateway
+    - if u have multiple sites with VPN among them already (may be having vpc connection via VP gateway or something else)
+    - cloud hub can give a secondary (or primary) way of connection as well  
     - hub-and-spoke model
-    - operates over public internet but all traffic is encrypted
+    - As its VPN, it operates over public internet but all traffic is encrypted
 - network costs
     - cross AZ is charged - within AZ is free
     - private IP is cheaper than public IP (going out to public internet and then coming in)
@@ -183,4 +203,12 @@
 - NLB (with auto scaling) for multiple bastions - as they are for ssh/rdp = layer 4 - but this is expensive option
     - cheaper - 1 bastion with EIP - behind auto scaling of 1 min/max - then new instance will be created only when its lost and with same EIP
     - but will have some down time
-    
+- Egress - internet gateway
+    - ipv6 only
+    - same as NAT
+    - as all ipv6 IPs are public - this way we can restrict public incoming - and allow only public outgoing
+    - after creating it - add route to route table
+- Classic Link - exam distractor
+    - ec2-classic - was where ec2 instances runs in a shared n/w
+    - then came vpc - where ur instances were logically isolated from others
+    - then to connect them privately - came classiclink
