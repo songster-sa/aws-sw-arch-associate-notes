@@ -1,10 +1,11 @@
 ## Contents
 - [CIDR](#CIDR)
-- [VPC General](#VPC-General)  
-- [VPC creation](#VPC-creation)  
-- [nACL vs security groups](#nACL-vs-security-groups)  
-- [DNS resolution](#DNS-resolution)  
-- [VPC](#VPC)
+- [VPC creation](#VPC-creation)
+- [nACL vs security groups](#nACL-vs-security-groups)
+- [DNS resolution](#DNS-resolution)
+- [VPC General](#VPC-General)
+- [Connecting to a remote/corporate network](#Connecting-to-a-remote/corporate-network)
+- [VPC Random](#VPC-Random)
 
 ## CIDR
 - /32 = 2^0 = 1 IP only
@@ -15,12 +16,6 @@
     - 10.0.0.0/8     - for big networks
     - 172.16.0.0/12  - default AWS
     - 192.168.0.0/16 - home network
-
-## VPC General
-- max 5 VPC per region -  soft limit
-- max 5 CIDR per vpc - max /16 : min /28
-- VPC is private - so Private IP ranges available
-- should not overlap with you other/corporate LAN/private IPs
 
 ## VPC creation
 - aws gives **default VPC** - all subnets are public / internet accessible - each instance has both public and private IP
@@ -98,17 +93,21 @@
 - requires BOTH vpc's route table updates
 - allows you to reference SG of peered VPC
 
-## VPC endpoints 
+## VPC endpoints
 - connecting to aws resources need not leave aws n/w
-- scale horizontally and redundant  
-- 2 types 
+- scale horizontally and redundant
+- 2 types
     - interface endpoints (via ENI priv IP and SG) - used most of the times
-      - for issues check DNS routing
+        - for issues check DNS routing
     - gateway endpoints (via route table) - used for s3 and dynamo db
-      - for issues check route table
-- after creating, use --region in CLI command to access
-    
-## VPC
+        - for issues check route table
+- after creating, use --region in CLI command to access (region where you ec2 is)
+
+## VPC General
+- max 5 VPC per region -  soft limit
+- max 5 CIDR per vpc - max /16 : min /28
+- VPC is private - so Private IP ranges available
+- should not overlap with you other/corporate LAN/private IPs
 - internet gateway / VP gateway -> router -> route tables -> network ACL -> instances in public / private subnets via their security groups
 - jump boxes / bastion hosts = ec2 instances in public SN via which u can ssh/rdp into instances in private SN
     - nothing to do on public instance - harden bastion host
@@ -116,15 +115,45 @@
     - bad practice to save key-pair on public instance
     - can shh into - but priv still cant access internet
 - flow logs
+    - 3 types
+        - VPC flow logs - includes the below 2
+        - subnet flow logs
+        - ENI flow logs
+    - can go into s3 / cloud watch logs
+    - to query them use - athena or cloud watch log insights
     - if u want flow logs for vpc peering, then both vpc have to be in same account
     - once flow log created - cannot change config later on
     - not logged - aws DNS, windows license server, 169.254.169.254, DHCP, reserved IP address
-- direct connect : client router -> partner router -> DX router -> aws public / vpc private
-    - DX console - public VI
-    - VPC console - customer gateway
-    - VP gateway - attach to vpc
-    - create VPN tieing VP gateway and customer gateway
-    - setup the VPN on customer site / firewall
+
+## Connecting to a remote/corporate network
+- **Option 1 - Site to Site VPN**
+    - VP gateway -> site to site vpn connection -> customer gateway
+        - VPC console - customer gateway
+        - VP gateway - attach to vpc
+        - create VPN tieing VP gateway and customer gateway
+        - setup the VPN on customer site / firewall
+    - use customer gw's public IP or if its behind a NAT use NAT's public IP
+- **Option 2 - Direct Connect DX**
+    - dedicated private connection - not over public internet
+    - you will still need a VP gateway on vpc outside
+    - access aws resources (s3) and all ur vpc stuff
+    - low cost, high bandwidth, real time data feeds
+    - done via aws dx locations
+    - client/customer router -> partner router -> aws DX router -> aws public / vpc private
+        - in DX console - set up a public virtual interface or private virtual interface as required
+    - connection types - takes atleast 1 month to set up
+        - dedicated connections
+        - hosted connections - hosted via partners - can add/remove capacity on demand
+    - as its private - nothing is encrypted
+        - but can do - by setting VPN on top of the connection
+    - resiliency
+        - high resiliency - set up DX via 2 DX locations - so if 1 goes down u can use other
+        - MAX resiliency - set up DX via 2 DX locations - but in each location have 2 connections (so total 4)
+- **Option 3 - Direct connect to multiple vpcs**
+    - client/customer router -> partner router -> aws DX router -> DX gateway -> can direct to multiple vpcs
+    - via private virtual interface
+
+## VPC Random
 - Global Accelerator
     - gives 2 static IPs or u can bring ur own
     - no ISP-DNS resolution to resolve aws urls
@@ -154,4 +183,4 @@
 - NLB (with auto scaling) for multiple bastions - as they are for ssh/rdp = layer 4 - but this is expensive option
     - cheaper - 1 bastion with EIP - behind auto scaling of 1 min/max - then new instance will be created only when its lost and with same EIP
     - but will have some down time
-
+    
