@@ -43,7 +43,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - resource policy - attached to resources
         - principal does not have to give up his permissions
 - permission boundaries - delegate admin
-    - can be set only for IAM users/ roles (NOT FOR GROUPS)
+    - **can be set only for IAM users/ roles (NOT FOR GROUPS)**
     - dont allow or deny - simply define the max perm entity can have
     - if present then this takes priority and is final
 - general iam permissions     
@@ -71,7 +71,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
         - Single Sign on
         - Non-SAML with AWS Microsoft AD
 - AWS Organization
-    - masterc account vs member accounts
+    - master account vs member accounts
     - paying account /consolidated billing
     - pricing benefits
     - api to automate account creation
@@ -79,8 +79,9 @@ https://github.com/songster-sa/aws-developer-associate-notes
         - not affective on service-linked roles
         - to allow, need to explicitly 
         - looks like IAM policy - works in a hierarchial manner (OU tree)
+        - are organization level
     - Organizational Unit
-    - Migrate accounts - remove, invite, accept
+    - **Migrate accounts** - Remove, Send/invite, Accept - RSA acronym
 - IAM conditions - mention in policy definition json
     - aws:SourceIP
     - aws:RequestedRegion
@@ -128,8 +129,11 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - Static web
     - legacy global endpoint
 - S3 analytics - move from standard to standard IA (takes 24-48hr to take affect)
+    - invalid moves - cant go back to standard tier
 - event notifications - SNS, SQS, lambda
 - Requester pays bucket - owner pays for storage cost but requester pays for n/w cost on download
+- S3 object locking - retention can be set per version - explicitly or by default setting
+- By default, an S3 object is owned by the AWS account that uploaded it. NOT by bucket owner.
 
 ## Data Sync
 - agent on on-premise system
@@ -152,6 +156,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - signed url key-pair managed by root account
 - policies like - URL expiration, IP ranges, trusted signers
 - Diff with S3 signed url - S3 one is temporary and for direct access, created by IAM user
+- can also be used to authenticate users - via congnito user pool - but needs Lambda@Edge function = development effort
 
 ## SnowBall
 - big disk - peta-byte - 50-80TB
@@ -160,7 +165,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - SnowBall Edge - 100TB - compute + storage - offline aws??
 - SnowBall Mobile - exa-byte
 - SnowBall Client - to export data
-- can use S3 to import-export
+- HAVE TO use S3 to import-export - you can't move data directly from Snowball into a Glacier Vault or a Glacier Deep Archive Vault. You need to go through S3 first and then use a lifecycle policy.
 
 ## Storage Gateway
 - is hardware or software
@@ -174,6 +179,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
         - 2 sub types
             - stored volume - all data on site, backup on S3
             - cached volume - all data on S3, only freq used on site
+    - tape
 
 ## Athena vs Macie
 - Athena 
@@ -192,7 +198,10 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - if aws stops then u r not charged for the partial hr - based on spot price - 2 min to decide stop or terminate
     - Spot block - 1-6hr block
     - Spot Request - one time or persistent
-    - Spot fleet - spot instances + on demand instances
+    - Spot fleet - spot instances + on demand instances - against target capacity
+        - by default it tries to maintain the target capacity
+        - capable of launching replacement spot instances automatically (For all other types you need to decide the instance type before hand)
+        - but no auto scaling capability
 - Spot instance strategies for the fleet
     - capacity optimised
     - lowest price - default
@@ -226,6 +235,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - types
         - cluster - all in same AZ - high n/w throughputs - only available for high instance types
         - spread - each instance on diff hardware - 7 max per AZ - can span across AZ
+            - not suited for distributed / hadoop / cassandra / kafka
         - partition - mix - each partition on diff hardware but 1 partition can many many ec2 - 1 AZ max 7 partition 
             - can span across AZ ????
             - for distributed databases like cassandra,kafka, hadoop etc
@@ -240,6 +250,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - AMIs - region specific - by default all private and live in S3
     - u can share with other accounts - u own ami
     - if they copy - they own the copied ami (add create-volume permission checkbox)
+    - when u copy - both AMI and snapshot is copied to new region  
     - to copy 
         - u need access to backed storage ( EBS or S3 )
         - OR - u launch instance and then create new AMI from that 
@@ -249,8 +260,16 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - billing product AMI - cant copy - launch instance and create AMI form there
 - ASG components - groups, config templates, scaling options
     - can define lifecycle hooks at pending-wait / termination-wait
-    - when removing an instance - 1st the zone with max instances is chosen, then the instance with oldest launch config is terminated
-    - launch template (new, versioned, params, mix instances) vs launch config (legacy, recreate everytime) 
+    - when removing an instance 
+        - 1st the zone with max instances is chosen, then the instance with oldest launch config is terminated
+        - on-demand / spot instance -> (oldest or the one) launch config -> oldest launch template -> closest to the next billing hour
+    - **launch template** (new, versioned, params, mix instances) vs launch config (legacy, recreate everytime)
+        - cannot use launch config to provision capacity - it only config for ASG to use to launch
+    - ASG will not terminate an unhealthy ec2 due to 
+        - grace period
+        - impaired status
+        - the failure is only on ELB health check and not EC2 health check (default)
+    - ASG can terminate spot instances - not due to health but due to cost or capacity
 - every ec2 instance has a check to confirm its either src or dest of traffic
 - scaling options
     - maintain current levels(no of instance) all time
@@ -279,7 +298,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - has to be added at ec2 creation time - cannot add later
     - volume dashboard wont show
     - can either reboot or terminate
-    - cannot stop - if stopped due to issue then data lost
+    - **cannot stop** - if stopped due to issue then data lost
 - how to create encrypted vol from unencrypted vol
 - u can share only unencrypted vols
 - 1 EBS can be attached to many EC2 - possible since feb 2020
@@ -293,6 +312,8 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - OS needs to support (linux, windows)
     - RAID 0 = striping = for inc performance - when u need lot of IOPs but not fault tolerance - everything summed up
     - RAID 1 = mirroring = for inc fault tolerance - everything remains same as 1 vol (not summed up or divided)
+- HDD-backed volume types CANNOT be used as a boot volume for ec2 
+- Amazon EBS Multi-Attach enables you to attach a single Provisioned IOPS SSD (io1 or io2) volume to multiple instances in the same AZ.
 
 ## Elastic Cache
 - Security
@@ -311,12 +332,17 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - support NFS v4 protocol
 - read after write consistency
 - applies within region (across AZ and ec2)
-- linus only
+- throughput modes (burstable , provisioned)
+- performance modes (max io, general purpose) 
 - Diff with FSx Windows - its SMB based, windows based, distributed FS
-- FSx Lustre - for HPC , machine learning, EDA, millions of IOPs, can store data directly on S3
+- FSx Lustre
+  - for linux
+  - for HPC , machine learning, EDA, millions of IOPs, can store data directly on S3
+  - handles both hot data and cold data
+  - where you require fast storage - to keep up with you compute
 
 ## HPC - high performance compute architecture
-- SnowBall , SnowMobile, DataSync, DirectConnect
+- SnowBall (TB), SnowMobile (PT), DataSync, DirectConnect
 - ec2 instance, ec2 fleet, placement group (cluster)
 - ENA, EFA
 - EBS with provisioned IOPs , instance store
@@ -335,7 +361,8 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - RRs can be in other regions
     - not for MS SQL
     - replication is free?
-- have option for storage auto scaling - to add storage on the fly
+- **have option for storage autoscaling** - to add storage on the fly 
+    - free limit if <10% of allocated | takes 5 min | gap of 6 hrs
 - have option of termination protection and maintenance window
 - RDS runs on VMs, but u dont have access to those VMs
 - backups storage - u get same size in S3 as ur DB size
@@ -380,6 +407,8 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - can do in a diff region
     - writer node - diff endpoint - diff AZ
     - reader node - diff endpoint - diff AZ
+- on failover - Aurora will promote the Read Replica that has the highest priority tier -> largest size in that tier
+- Aurora multi-master DB cluster- all DB instances can perform write operations.
 
 ## DMS - database migration system
 - src (on-premise, ec2, rds, s3, azure sql) - dest (on-premise, ec2, RDS etc) - can be any DB
@@ -639,4 +668,28 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - cross region - 0.02
     - for s3 - using cloud front may be cheaper than transfer accelaration / edge location
     - if vpc wants to connect to s3 - vpc endpoint is cheaper than NAT (ofcourse as the later goes via internet)
-
+- S3TA, you pay only for transfers that are accelerated
+- SSO and IAM - 2 services to federate workforce into AWS
+- Guard duty - analyse for malicious threats - CloudTrail events, VPC Flow Logs, and DNS logs 
+- Dynamic contents and proxy methods - skip the cloud front regional edge cache
+- API Gateway supports stateless RESTful APIs as well as stateful WebSocket APIs
+- Instance stores are physical disks. EFS / EBS needs extra resources to be provisioned.
+- Kinesis Agent cannot write to a Kinesis Firehose for which the delivery stream source is already set as Kinesis Data Stream
+- Dedicated instances are also single tenant
+- User pools provide
+    - sign-up sign-in services
+    - UI to sign in
+    - social sign-in
+    - SAML sign-in
+    - user management (directory and profiles)
+    - security like MFA, phone/email verification etc
+    - Customized workflows and user migration through AWS Lambda triggers
+- AWS Global Accelerator 
+    - network layer service that directs traffic to optimal endpoints over the AWS global network 
+    - improves the availability and performance of your internet applications. 
+    - No DNS caching issue and best fit for blue-green deployment.  
+- POSIX compliant
+  - S3 - is shared storage - not file system - is object based - not POSIX
+  - EBS - not shared - is file system - is POSIX
+  - Instance store - not shared - is file system - is POSIX
+  - EFS - is shared - is file system - is POSIX

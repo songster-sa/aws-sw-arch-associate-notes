@@ -212,3 +212,6 @@
     - ec2-classic - was where ec2 instances runs in a shared n/w
     - then came vpc - where ur instances were logically isolated from others
     - then to connect them privately - came classiclink
+- VPC Shared Services
+    - provides access to shared/common services to each/multiple VPC
+    - share resources from a central location - instead of building in each VPC - reduce admin and cost
