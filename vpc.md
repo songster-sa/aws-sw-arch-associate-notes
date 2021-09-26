@@ -167,7 +167,7 @@
     - ur can use IPs or GA'S DNS name
     - network zone - similar to AZ
     - listeners (port, protocol, client affinity), endpoint grps per region (traffic dial), endpoints (ALB, EC2 - can have weighted endpoints as well)
-- VPC private link - VPC endpoint services
+- **VPC private link** - VPC endpoint services
     - open up ur service (sitting in ur vpc) to 100s or other vpcs
     - one way - make service public via internet - bad for security
     - 2nd way - peering 
@@ -177,7 +177,7 @@
         - ENI (of ur cutomer vpc) -> customer vpc
         - VP gateway
         - DX gateway / DX 
-- transit gateway = transitive peering
+- **transit gateway** = transitive peering = for onsite-vpc(multiple) connections
     - simplify n/w arch / topology
     - transitive peering - hub-and-spoke model
     - regional, or cross region, or cross aws accounts
@@ -190,7 +190,7 @@
         - 1 tunnel = 2 conns = 1.25 Gbps
         - ECMP = 2 tunnels = 4 conns = 2.5 Gbps
         - additionally u can add more
-- VPN cloud Hub
+- **VPN cloud Hub** - for multiple on-sites
     - if u have multiple sites with VPN among them already (may be having vpc connection via VP gateway or something else)
     - cloud hub can give a secondary (or primary) way of connection as well  
     - hub-and-spoke model
@@ -212,6 +212,33 @@
     - ec2-classic - was where ec2 instances runs in a shared n/w
     - then came vpc - where ur instances were logically isolated from others
     - then to connect them privately - came classiclink
-- VPC Shared Services
+- **VPC Shared Services**
     - provides access to shared/common services to each/multiple VPC
     - share resources from a central location - instead of building in each VPC - reduce admin and cost
+- **Share subnet via RAM** (resource access manager)
+    - all ec2 can sit in there - communicate to each other - any account can deploy ec2
+
+## DB differences
+- multi az
+    - high availability
+    - non-aurora is synchronous, aurora is async
+    - non-aurora only primary instance is active , aurora all instances are active
+    - non-aurora automated backups are taken from standby
+    - atleast 2 az per region
+    - non-aurora DB engine updates happen on primary , aurora happens on all
+    - non-aurora automatic failover to standby
+- multi region
+    - disaster recovery and local performance
+    - async
+    - all regions accessible and can be used for reads
+    - each region has its own backups, own multi az deployment
+    - non-aurora DB engine updates are independent in each region , aurora happens on all
+    - in aurora u can make it master on failover
+- read replica
+    - scalability, performance
+    - async
+    - all accessible and can be used for reads
+    - no backups taken by default
+    - can be same az, cross az, cross region
+    - non-aurora DB engine updates are independent of source , aurora happens on all
+    - can manually promote to standalone db or primary instance on failover    

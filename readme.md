@@ -134,6 +134,9 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - Requester pays bucket - owner pays for storage cost but requester pays for n/w cost on download
 - S3 object locking - retention can be set per version - explicitly or by default setting
 - By default, an S3 object is owned by the AWS account that uploaded it. NOT by bucket owner.
+- IAM policies - user level bucket access
+- ACLs - account level bucket access 
+- bucket policies - user and account level access controls
 
 ## Data Sync
 - agent on on-premise system
@@ -409,6 +412,9 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - reader node - diff endpoint - diff AZ
 - on failover - Aurora will promote the Read Replica that has the highest priority tier -> largest size in that tier
 - Aurora multi-master DB cluster- all DB instances can perform write operations.
+- Global DB - designed for globally distributed applications
+    - single DB spans across multiple regions
+    - replicates - no performance loss - fast local reads - disaster recovery
 
 ## DMS - database migration system
 - src (on-premise, ec2, rds, s3, azure sql) - dest (on-premise, ec2, RDS etc) - can be any DB
@@ -693,3 +699,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
   - EBS - not shared - is file system - is POSIX
   - Instance store - not shared - is file system - is POSIX
   - EFS - is shared - is file system - is POSIX
+- SNS FIFO topic can only have an SQS FIFO queue as a subscriber and not a standard SQS queue.
+- SNS standard topic can only have an SQS standard queue as a subscriber and not a FIFO SQS queue.
+- s3:ListBucket is applied to buckets, so the ARN is in the form "Resource":"arn:aws:s3:::mybucket", without a trailing / s3:GetObject is applied to objects within the bucket, so the ARN is in the form "Resource":"arn:aws:s3:::mybucket/*", with a trailing /* to indicate all objects within the bucket
+- Chef and Puppet - configuration management tools for which OpsWorks provides managed instances
