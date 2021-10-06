@@ -9,7 +9,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 ## Contents
 - [IAM](#IAM)
 - [S3](#S3)
-- [Data Sync](#Data-Sync)
+- [Transfer data from on-premise to aws](#Transfer-data-from-on-premise-to-aws)
 - [Cloud Front](#Cloud-Front)
 - [SnowBall](#SnowBall)
 - [Storage Gateway](#Storage-Gateway)
@@ -76,12 +76,14 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - pricing benefits
     - api to automate account creation
     - SCP (service control policy) - to enable/disable services on OU / member accounts
-        - not affective on service-linked roles
+        - **not affective on service-linked roles**
+        - **affect all users and roles, including root user**  
         - to allow, need to explicitly 
         - looks like IAM policy - works in a hierarchial manner (OU tree)
         - are organization level
     - Organizational Unit
     - **Migrate accounts** - Remove, Send/invite, Accept - RSA acronym
+    - Use AWS CloudFormation StackSets to deploy the same template across AWS accounts and regions
 - IAM conditions - mention in policy definition json
     - aws:SourceIP
     - aws:RequestedRegion
@@ -138,13 +140,36 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - ACLs - account level bucket access 
 - bucket policies - user and account level access controls
 
-## Data Sync
+## Transfer data from on-premise to aws
+### Data Sync
 - agent on on-premise system
 - used to share / transfer NFS or SMB compatible FS to AWS (s3,EFS,FSx for windows)
 - automatic encryption - both at-rest and in-transit
 - automatic integrity checks
 - replication per hr/day/week
 - can also be used on EC2 - for EFS to EFS
+### SnowBall
+- big disk - peta-byte - 50-80TB
+- security -  tamper resistant, encryption, TPM (trusted platform module)
+- after transfer aws erases it using software
+- SnowBall Edge - 100TB - compute + storage - offline aws??
+- SnowBall Mobile - exa-byte
+- SnowBall Client - to export data
+- HAVE TO use S3 to import-export - you can't move data directly from Snowball into a Glacier Vault or a Glacier Deep Archive Vault. You need to go through S3 first and then use a lifecycle policy.
+### Storage Gateway
+- hybrid cloud storage service
+- is hardware or software
+- transfer from on-premise(site) to aws
+- via direct connection / internet / VPC
+- 3 types
+  - file gateway - for NFS / SMB - direct on S3
+  - volume gateway
+    - stored as EBS volume snapshots (incremental)
+    - compressed and stored on S3
+    - 2 sub types
+      - stored volume - all data on site, backup on S3
+      - cached volume - all data on S3, only freq used on site
+  - tape
 
 ## Cloud Front
 - origins can be - S3, EC2, Route53, ELB
@@ -161,29 +186,6 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - Diff with S3 signed url - S3 one is temporary and for direct access, created by IAM user
 - can also be used to authenticate users - via congnito user pool - but needs Lambda@Edge function = development effort
 
-## SnowBall
-- big disk - peta-byte - 50-80TB
-- security -  tamper resistant, encryption, TPM (trusted platform module)
-- after transfer aws erases it using software
-- SnowBall Edge - 100TB - compute + storage - offline aws??
-- SnowBall Mobile - exa-byte
-- SnowBall Client - to export data
-- HAVE TO use S3 to import-export - you can't move data directly from Snowball into a Glacier Vault or a Glacier Deep Archive Vault. You need to go through S3 first and then use a lifecycle policy.
-
-## Storage Gateway
-- is hardware or software
-- transfer from on-premise(site) to aws
-- via direct connection / internet / VPC
-- 3 types
-    - file gateway - for NFS / SMB - direct on S3
-    - volume gateway 
-        - stored as EBS volume snapshots (incremental)
-        - compressed and stored on S3
-        - 2 sub types
-            - stored volume - all data on site, backup on S3
-            - cached volume - all data on S3, only freq used on site
-    - tape
-
 ## Athena vs Macie
 - Athena 
     - SQL - query data on S3
@@ -191,7 +193,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - serverless
     - for logs, reports, click stream data
 - Macie
-    - security service to descover, classify and protect PII
+    - security service to discover, classify and protect PII
     - use machine learning and NLP, AI
     - use cloud trail logs
     - creates dashboards, reports and alerts
@@ -209,7 +211,10 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - capacity optimised
     - lowest price - default
     - diversified - distribute across all launch-pools defined
-    - instance pools to use count
+    - instance pools to use count 
+- If a spot request is persistent, then it is opened again after your Spot Instance is interrupted
+- Spot blocks are designed not to be interrupted
+- When you cancel an active spot request, it does not terminate the associated instance  
 - EC2 instance connect - tool
 - Status checks
     - system status check
@@ -273,6 +278,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
         - impaired status
         - the failure is only on ELB health check and not EC2 health check (default)
     - ASG can terminate spot instances - not due to health but due to cost or capacity
+    - when 2 policies take affect simulatenously - chooses the policy that provides the largest capacity for both scale-out and scale-in
 - every ec2 instance has a check to confirm its either src or dest of traffic
 - scaling options
     - maintain current levels(no of instance) all time
@@ -397,13 +403,14 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - encryption - in transit + at rest
 - no multi AZ - but if outage - u can use snapshots to restore in diff AZ
 
-#Aurora
+## Aurora
 - starts with 10GB, auto scales in 10GB increments - upto 64TB
 - compute resources can scale upto 32vCPU and 244GB
 - auto backups always enabled - dont affect performance
 - can share snapshots with other aws accounts
 - aurora serverless 
     - on demand, cost effective
+    - fully managed auto scaling  
     - automatically starts, shuts down, scales up or down
     - for infrequent, intermittent, unpredictable workloads
 - how to convert MYSQL to Aurora - create aurora read replica - then promote to DB (or take snapshot of RR and then restore as new DB)
@@ -446,18 +453,20 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - helps u access aws using corporate credentials
 - u can SSO to all ec2 instance joined to your AD domain - using AD Connectors (directory gateway)
 - What is AD - users, groups, policies, LDAP and DNS, kerberos auth, high availability
-- AWS managed Microsoft AD Domain Controllers - run on windows - in multi AZ (default 2)
+- **AWS managed Microsoft AD** Domain Controllers - run on windows - in multi AZ (default 2)
     - has MFA
-    - extend aws AD to on-premise AD using AD Trust
-    - u have to take care of only the data eg users, groups, policies, scaling DC, AD Trust, LDAPS (certificate authority), federation
+    - extend aws AD to on-premise AD using **AD Trust**
+    - u have to take care of only the data eg users, groups, policies, scaling DC, AD Trust, LDAPS (certificate authority), **federation**
     - aws takes of - multi AZ, patching, snapshot and restore, instance rotation
-- AD connector - Directory Gateway (proxy) - users are all managed in the on-premise AD
-- Simple AD - stand alone
+    - includes trust and ALL the managing and directory-aware workloads
+- **AD connector** - Directory Gateway (proxy) - users are all managed in the on-premise AD
+    - access aws via AD creds - thats the only thing it provides
+- **Simple AD** - stand alone
     - basic AD features (api)
     - small <=500 users, large <=5000 users
     - does not support AD Trust
     - no on-premise AD
-- Cloud Directory - fully managed directory-based store for developers
+- **Cloud Directory** - fully managed cloud-native directory-based store for developers
     - for apps which create/use/work with org charts, catalogs, registries
     - not AD compatible
 
@@ -478,8 +487,12 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - top level domain server -> name server -> start of authority server -> DNS record -> IP
 - default TTL is 48hr with most ISP
 - cant have CNAME for naked domain names (without www)
-- MX record
-- PTR record - like WhoIs - lookup IP to find domain name
+- alias - cost effective - works on top of DNS record - prefer always - but cannot remap domains - any-to-aws
+- CNAME -  one (non-root)domain to another (any)domain  
+- MX record - for mail server
+- NS record - name server for hosted zone  
+- PTR record - pointer - like WhoIs - lookup IP to find domain name
+- A record - domain to IP 
 - u can buy domains directly with amazon - it gives multiple top level domains to you - in case one goes down
 - u can set health checks - if fails then route is taken out until it passes
 - Geo-proximity routing - traffic flow only - create traffic policies
@@ -488,12 +501,14 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - how to use route53 with a 3rd party domain registrar
      - create Hosted Zone in route 53
      - update 3rd party name servers to use route53 name servers
+- Create an inbound endpoint on Route 53 Resolver and then DNS resolvers on the on-premises network can forward DNS queries to Route 53 Resolver via this endpoint
+- Create an outbound endpoint on Route 53 Resolver and then Route 53 Resolver can conditionally forward queries to resolvers on the on-premises network via this endpoint  
      
 ## On-premise strategies
 - DMS - db migration service
 - SMS - server migration service
     - incremental replication of on-prem server
-- application discovery service
+- ADS - application discovery service
     - helps plan the migration
     - install "app discovery agentless connector" - on to ur vmware
     - it will create (server utilization and dependency) map of everything - store encrypted
@@ -628,7 +643,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - Quick Start - has bunch of cloud formation templates for various use cases
 - elastic beanstalk - no infra, no template - just upload code and it will figure out what to do and provision everything
     - all auto scaling etc can be done from its UI
-- SQS - used to decouple components
+
 - same origin policy - is done by browser to prevent cross-site-scripting attacks
     - but in aws all resources have own domains - so allow CORS - for somethings like fonts
     - enabled at server side (not client or browser side) - but enforced by client / browser
@@ -665,6 +680,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - public - you tell route53 that when request comes for example.com - send it to my blah IP
     - private - you tell route53 that when request comes for example.internal - send it to my blah VPC 
       - will go to the ec2 instance with DnsHostname enabled
+
 - network cost in aws per GB
     - all incoming is free, outgoing is charged (so keep outgoing min)
     - within AZ is free as long as its using private IP
@@ -674,6 +690,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - cross region - 0.02
     - for s3 - using cloud front may be cheaper than transfer accelaration / edge location
     - if vpc wants to connect to s3 - vpc endpoint is cheaper than NAT (ofcourse as the later goes via internet)
+
 - S3TA, you pay only for transfers that are accelerated
 - SSO and IAM - 2 services to federate workforce into AWS
 - Guard duty - analyse for malicious threats - CloudTrail events, VPC Flow Logs, and DNS logs 
@@ -690,16 +707,50 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - user management (directory and profiles)
     - security like MFA, phone/email verification etc
     - Customized workflows and user migration through AWS Lambda triggers
+
 - AWS Global Accelerator 
-    - network layer service that directs traffic to optimal endpoints over the AWS global network 
+    - **network layer service** that directs traffic to optimal endpoints over the AWS global network 
     - improves the availability and performance of your internet applications. 
-    - No DNS caching issue and best fit for blue-green deployment.  
+    - No DNS caching issue and best fit for blue-green deployment.
+    - **good fit for non-HTTP use cases**, such as gaming (UDP), IoT (MQTT), or Voice over IP.
+    - also used for simplifying routing in a multi-region, multi-elb network
+
 - POSIX compliant
   - S3 - is shared storage - not file system - is object based - not POSIX
   - EBS - not shared - is file system - is POSIX
   - Instance store - not shared - is file system - is POSIX
   - EFS - is shared - is file system - is POSIX
+
+- SQS - used to decouple components
 - SNS FIFO topic can only have an SQS FIFO queue as a subscriber and not a standard SQS queue.
 - SNS standard topic can only have an SQS standard queue as a subscriber and not a FIFO SQS queue.
+- You can't convert an existing standard queue into a FIFO queue.
+- The name of a FIFO queue must end with the .fifo suffix.
+- By default, FIFO queues support up to 3,000 messages per second with batching.
+
 - s3:ListBucket is applied to buckets, so the ARN is in the form "Resource":"arn:aws:s3:::mybucket", without a trailing / s3:GetObject is applied to objects within the bucket, so the ARN is in the form "Resource":"arn:aws:s3:::mybucket/*", with a trailing /* to indicate all objects within the bucket
 - Chef and Puppet - configuration management tools for which OpsWorks provides managed instances
+
+- NLB 
+    - If you specify targets using an instance ID, traffic is routed using the primary private IP address of the instance.
+    - If you specify targets using IP addresses, traffic is routed using any private IP address from one or more network interfaces.
+    - You cannot use instance ID to route traffic to the instance
+
+- EC2, ECS, EMR, beanstalk, opsWork - give access to underlying OS
+- Use AZ ID to uniquely identify the Availability Zones across the two AWS Accounts
+- Dedicated instances may share hardware with other instances from the same AWS account that are not dedicated instances.
+  
+- **Step functions VS Simple workflow**
+    - prefer step functions always
+    - SWF increases dev complexity
+  
+- you can change tenancy between - dedicate and host - both ways 
+- DocumentDB - for json, mongoDB - no caching
+
+- **S3TA vs cloud front**
+  - if data <=1GB - choose cloud front
+  - for much higher data/performance - use S3TA - uses cloud front internally + n/w routing optimization
+  
+- **Aurora global db vs dynamo global tables**
+  - AGD supports RPO RTO failover within seconds/minutes - single db across regions
+  - DGT - writes in own region and then replicate/sync - costlier

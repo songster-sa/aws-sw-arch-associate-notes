@@ -39,7 +39,8 @@
 - **Step 3** - creating internet gateway - also serves as NAT
     - only 1 per vpc
     - by default detached - u need to attach to ur vpc
-    - public SN will get access to internet
+    - **public SN will get access to internet**
+    - any EC2 in public SN will use this for network address translation
 - **Step 4** - create new route table
     - should always leave the main / default route table private - so anything new create is not public
     - may have 1 private route table and 1 public route table
@@ -55,6 +56,8 @@
         - also add NATi to the public route table with target igw
         - DISADV - as its an EC2 instance - we will need to make it HA with ASG in multiple AZ and maintain and all
             - set inbound SG and outbound SG rules etc tec
+        - as its instance - can be connected to SG, can be used as bastion server
+        - supports port forwarding
     - NATg
         - create and add route to default/main/private route table
         - 1 per AZ - scales automatically
@@ -217,6 +220,10 @@
     - share resources from a central location - instead of building in each VPC - reduce admin and cost
 - **Share subnet via RAM** (resource access manager)
     - all ec2 can sit in there - communicate to each other - any account can deploy ec2
+- Launch Configuration Tenancy vs VPC Tenancy
+    - if LCT is provided - it is preferred
+    - if LCT is default - then VPC tenancy is checked
+- "VPC with a public subnet only and AWS Site-to-Site VPN access" is NOT supported by the Amazon VPC console wizard.    
 
 ## DB differences
 - multi az
