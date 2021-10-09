@@ -94,13 +94,13 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - by default everything is DENY
     - SCP -> resource based policies -> perm boundaries -> session policies -> identity based policies
     - SRBSI
-
+- Admin access VS Root access  - not same
 
 ## S3
 - components - key, value, versionId, metadata, tiers, lifecycle mgmt, versioning, encryption
 - security - ACL , torrent ? (bucket policy)
 - MFA delete
-- Glacier standard vs Deep archive
+- Glacier standard vs Deep archive - 3-5-12hr VS 12-48hr  
 - Cross Region Replication 
     - can be configured via lifecycle rules
     - versioning should be on in both src and dest bucket
@@ -135,6 +135,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - event notifications - SNS, SQS, lambda
 - Requester pays bucket - owner pays for storage cost but requester pays for n/w cost on download
 - S3 object locking - retention can be set per version - explicitly or by default setting
+    - this way u can prevent deletion of data after written
 - By default, an S3 object is owned by the AWS account that uploaded it. NOT by bucket owner.
 - IAM policies - user level bucket access
 - ACLs - account level bucket access 
@@ -156,6 +157,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - SnowBall Mobile - exa-byte
 - SnowBall Client - to export data
 - HAVE TO use S3 to import-export - you can't move data directly from Snowball into a Glacier Vault or a Glacier Deep Archive Vault. You need to go through S3 first and then use a lifecycle policy.
+- OpsHub - to manage all SnowBall devices you may have
 ### Storage Gateway
 - hybrid cloud storage service
 - is hardware or software
@@ -185,6 +187,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - policies like - URL expiration, IP ranges, trusted signers
 - Diff with S3 signed url - S3 one is temporary and for direct access, created by IAM user
 - can also be used to authenticate users - via congnito user pool - but needs Lambda@Edge function = development effort
+- Use field level encryption in CloudFront to protect sensitive data for specific content
 
 ## Athena vs Macie
 - Athena 
@@ -273,12 +276,16 @@ https://github.com/songster-sa/aws-developer-associate-notes
         - on-demand / spot instance -> (oldest or the one) launch config -> oldest launch template -> closest to the next billing hour
     - **launch template** (new, versioned, params, mix instances) vs launch config (legacy, recreate everytime)
         - cannot use launch config to provision capacity - it only config for ASG to use to launch
+    - Launch configurations are immutable meaning they cannot be updated.
     - ASG will not terminate an unhealthy ec2 due to 
         - grace period
         - impaired status
         - the failure is only on ELB health check and not EC2 health check (default)
     - ASG can terminate spot instances - not due to health but due to cost or capacity
     - when 2 policies take affect simulatenously - chooses the policy that provides the largest capacity for both scale-out and scale-in
+    - ASG cannot add a volume to instances
+    - if you delete a running ASG, all instances will be terminated as well
+    - use lifecylce hooks to copy data into new instances
 - every ec2 instance has a check to confirm its either src or dest of traffic
 - scaling options
     - maintain current levels(no of instance) all time
@@ -291,7 +298,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - gp2 , io1, st1, sc1, standard
 - root vol is always in same AZ as ec2 - comes from ami snapshot
 - u can change size/storage of vols on the fly - take some time
-- by default vols are AZ locked
+- **by default vols are AZ locked**
 - how to move vol to another AZ - take snapshot, copy it to diff az (optional step), create volume from it (can create without copying to az as well)
 - how to move vol to another region -
 - can detach EBS on fly or after stopping ?
@@ -388,7 +395,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
         - good for new apps where we dono the expected load
 - Streams - can be used for cross region replication, events-Lambda, relationships across table
     - global tables - use streams to replicate
-- auto encryption at rest - of course via KMS
+- auto encryption at rest - of course via KMS - AWS owned CMK - no entry in cloud logs
 
 ## Redshift
 - single node - 160gb
@@ -432,6 +439,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - schedule task on the DMS server
 - u can let DMS create tables on dest, or u can pre-create them (manually or use SCT - schema conversion tool , some or all)
 - supports homogeneous and heterogeneous (need SCT) migrations
+- S3 to kinesis stream as well
 
 ## Amazon EMR - elastic map reduce
 - big data platform
@@ -503,7 +511,8 @@ https://github.com/songster-sa/aws-developer-associate-notes
      - update 3rd party name servers to use route53 name servers
 - Create an inbound endpoint on Route 53 Resolver and then DNS resolvers on the on-premises network can forward DNS queries to Route 53 Resolver via this endpoint
 - Create an outbound endpoint on Route 53 Resolver and then Route 53 Resolver can conditionally forward queries to resolvers on the on-premises network via this endpoint  
-     
+- you configure active-passive type only using the failover routing policy      
+
 ## On-premise strategies
 - DMS - db migration service
 - SMS - server migration service
@@ -530,7 +539,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - NACL -> NLB -> ec2 (NLB does not block connection - so IP add is visible end to end)
 - cloud front
     - WAF -> cloud front -> NACL -> ALB -> ec2 (againt the conn terminates at CF - so use WAF)
-- NACL only deals with IPs and WAF handles other things as well (XSS, SQL inj etc) - so choose accordingly
+- NACL only deals with IPs and WAF handles other things as well (geomatch, IP allow, XSS, SQL inj etc) - so choose accordingly
 - KMS - FIPS 140-2 level 2
     - once u encrypt file - when u decrypt u dont need to mention key/alias again as its kept in the metadata
     - u will always have to decode base64
@@ -643,6 +652,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - Quick Start - has bunch of cloud formation templates for various use cases
 - elastic beanstalk - no infra, no template - just upload code and it will figure out what to do and provision everything
     - all auto scaling etc can be done from its UI
+    - to make installation faster - Golden AMI and user data
 
 - same origin policy - is done by browser to prevent cross-site-scripting attacks
     - but in aws all resources have own domains - so allow CORS - for somethings like fonts
@@ -664,11 +674,11 @@ https://github.com/songster-sa/aws-developer-associate-notes
     MSSQL Server: 1433
     MariaDB: 3306 (same as MySQL)
     Aurora: 5432 (if PostgreSQL compatible) or 3306 (if MySQL compatible)
-- AWS Glue - ETL service (extract, transform, load) - serverless
+- AWS Glue - **ETL service** (extract, transform, load) - serverless
     - Glue data catalog - can be used by Athena, Redshift, EMR, 
     - Glue data crawler
     - Glue Jobs
-- AWS Neptune - graph database - used for highly linked / related data (social n/w, wikipedia)
+- AWS Neptune - **graph database** - used for highly linked / related data (social n/w, wikipedia)
     - most properties similar to RDS
 - Elastic Search - ELK stack (elastic search, kibana, logstash)
     - most properties similar to RDS
@@ -698,7 +708,9 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - API Gateway supports stateless RESTful APIs as well as stateful WebSocket APIs
 - Instance stores are physical disks. EFS / EBS needs extra resources to be provisioned.
 - Kinesis Agent cannot write to a Kinesis Firehose for which the delivery stream source is already set as Kinesis Data Stream
+- Firehose can only write to S3, Redshift, Elasticsearch or Splunk - not to any generic customer
 - Dedicated instances are also single tenant
+
 - User pools provide
     - sign-up sign-in services
     - UI to sign in
@@ -727,6 +739,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - You can't convert an existing standard queue into a FIFO queue.
 - The name of a FIFO queue must end with the .fifo suffix.
 - By default, FIFO queues support up to 3,000 messages per second with batching.
+- S3 does not allow FIFO SQS as event notification destination
 
 - s3:ListBucket is applied to buckets, so the ARN is in the form "Resource":"arn:aws:s3:::mybucket", without a trailing / s3:GetObject is applied to objects within the bucket, so the ARN is in the form "Resource":"arn:aws:s3:::mybucket/*", with a trailing /* to indicate all objects within the bucket
 - Chef and Puppet - configuration management tools for which OpsWorks provides managed instances
@@ -735,6 +748,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
     - If you specify targets using an instance ID, traffic is routed using the primary private IP address of the instance.
     - If you specify targets using IP addresses, traffic is routed using any private IP address from one or more network interfaces.
     - You cannot use instance ID to route traffic to the instance
+    - Exposes IP to be used (whitelisted) by external parties to send traffic (ALB gives DNS not IP)
 
 - EC2, ECS, EMR, beanstalk, opsWork - give access to underlying OS
 - Use AZ ID to uniquely identify the Availability Zones across the two AWS Accounts
@@ -754,3 +768,49 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - **Aurora global db vs dynamo global tables**
   - AGD supports RPO RTO failover within seconds/minutes - single db across regions
   - DGT - writes in own region and then replicate/sync - costlier
+  
+- AWS Cost Explorer Resource Optimization - helps you identify under-utilized EC2 instances
+- AWS Compute Optimizer - recommends optimal AWS Compute resources
+- All dependencies should be packaged together with code for lambda - or else use lambda layers if common / reusable
+- Amazon SageMaker helps data scientists and developers to prepare, build, train, and deploy high-quality machine learning (ML) models quickly
+- Amazon WorkSpaces is a managed, secure Desktop-as-a-Service (DaaS) solution        
+- Amazon MQ = for msg broker - ActiveMQ - JMS, MQTT etc protocol
+
+- Event-bridge = use for third-party SaaS integration - async decouple
+- AWS Snowball Edge Storage Optimized and AWS Snowball Edge Compute Optimized offer the storage clustering feature
+
+- DR scenario - pilot light (minimal, critical), multi-site, warm-standby (scaled down version), backup-restore
+
+- Amazon QuickSight vs Athena - QS is for visual rep but not powerful query tool like athena
+- AWS WAF is tightly integrated with Amazon CloudFront and the ALB
+
+- Amazon Redshift Spectrum - query and retrieve structured and semistructured data from S3 without having to load the data into Redshift
+- ALB cannot use EC2 based health checks. ALB will have to use its own defined health check logic.
+  - best is for both ALB and ASG to use ALB's check only then.
+
+## DB differences
+- multi az
+  - high availability
+  - non-aurora is synchronous, aurora is async
+  - non-aurora only primary instance is active , aurora all instances are active
+  - non-aurora automated backups are taken from standby
+  - atleast 2 az per region
+  - non-aurora DB engine updates happen on primary , aurora happens on all
+  - non-aurora automatic failover to standby
+  - CNAME record gets updated on failover - access URL remains same
+- multi region
+  - disaster recovery and local performance
+  - async
+  - all regions accessible and can be used for reads
+  - each region has its own backups, own multi az deployment
+  - non-aurora DB engine updates are independent in each region , aurora happens on all
+  - in aurora u can make it master on failover
+- read replica
+  - scalability, performance
+  - async
+  - all accessible and can be used for reads
+  - no backups taken by default
+  - can be same az, cross az, cross region
+  - non-aurora DB engine updates are independent of source , aurora happens on all
+  - can manually promote to standalone db or primary instance on failover                       
+
