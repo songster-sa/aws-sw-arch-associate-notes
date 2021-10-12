@@ -774,7 +774,7 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - All dependencies should be packaged together with code for lambda - or else use lambda layers if common / reusable
 - Amazon SageMaker helps data scientists and developers to prepare, build, train, and deploy high-quality machine learning (ML) models quickly
 - Amazon WorkSpaces is a managed, secure Desktop-as-a-Service (DaaS) solution        
-- Amazon MQ = for msg broker - ActiveMQ - JMS, MQTT etc protocol
+- Amazon MQ = for msg broker - ActiveMQ, RabbitMQ - JMS, MQTT etc protocol
 
 - Event-bridge = use for third-party SaaS integration - async decouple
 - AWS Snowball Edge Storage Optimized and AWS Snowball Edge Compute Optimized offer the storage clustering feature
@@ -787,6 +787,29 @@ https://github.com/songster-sa/aws-developer-associate-notes
 - Amazon Redshift Spectrum - query and retrieve structured and semistructured data from S3 without having to load the data into Redshift
 - ALB cannot use EC2 based health checks. ALB will have to use its own defined health check logic.
   - best is for both ALB and ASG to use ALB's check only then.
+  
+- AWS recommends that you should use AWS DataSync to migrate existing data to Amazon S3, and subsequently use the File Gateway configuration of AWS Storage Gateway to retain access to the migrated data and for ongoing updates
+- AWS Shield Advanced will give you DDoS protection overall, and you cannot set up rate-based rules in Shield
+- IOPS cannot be directly increased on a gp2 volume without increasing its size
+- **SQS Temporary Q** help you save development time and deployment costs when using common message patterns such as request-response.
+- origin access identity (OAI) - cloud front - To restrict access to content that you serve from Amazon S3 buckets
+- SQS long polling or short polling cannot impact the priority of processing for the two queues
+- S3 bucket policy is limited (Bucket policies are limited to 20 KB in size
+- EBS Multi-Attach is supported exclusively on Provisioned IOPS SSD volumes.
+- ASG 
+    - re balancing - create new first - then terminate old
+    - unhealthy - terminate first - then another scaling event for creating new (because if its not under min, it may not create even)
+    - desired - is only for first time
+- AWs firewall manager - on WAF and Shield
+- Instance store is never preserved - not on hibernate, not on AMI, not on stop/terminate. Also u cant detach and re-attach
+- KDS - is NOT auto scalled - as u have to manually add shards
+- Dynamic port mapping with an Application Load Balancer makes it easier to run multiple tasks on the same Amazon ECS service on an Amazon ECS cluster
+- If the EC2 is already running, you can set DeleteOnTermination to False using the command line.
+- CANNOT run the analytics workload on the standby database - as its not accessible for read-writes
+- Glacier - S3 storage class supports encryption by default for both data at rest as well as in-transit
+- big data large distributed and replicated workloads - partition placement group
+- for bastion host - use NLB as SSH is network layer thing - ALB is only application layer
+
 
 ## DB differences
 - multi az
@@ -798,6 +821,8 @@ https://github.com/songster-sa/aws-developer-associate-notes
   - non-aurora DB engine updates happen on primary , aurora happens on all
   - non-aurora automatic failover to standby
   - CNAME record gets updated on failover - access URL remains same
+  - Upgrades to the database engine level require downtime - both primary and standy done together
+  - OS updates dont need downtime - standby done first, primary later
 - multi region
   - disaster recovery and local performance
   - async
